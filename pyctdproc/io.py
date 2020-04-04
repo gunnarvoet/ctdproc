@@ -36,6 +36,7 @@ class CTD(object):
             par="PAR_BiosphericalLicorChelseaSensor",
             trans="WET_LabsCStar",
         )
+        self._mapunits_volt = dict(oxygen="", alt="m", spar="", fl="", par="", trans="")
         self._mapnames_freq = dict(
             t1="TemperatureSensor1",
             t2="TemperatureSensor2",
@@ -43,6 +44,9 @@ class CTD(object):
             c2="ConductivitySensor2",
             p="PressureSensor",
         )
+        self._mapunits_freq = dict(t1="°C", t2="°C", c1="mS/cm", c2="mS/cm", p="dbar",)
+
+        # run all processing steps
         self.run_calcs()
 
     def run_calcs(self):
@@ -301,6 +305,8 @@ class CTD(object):
         return pst, ctdstatus
 
     def _find_xmlconfig(self):
+        """Generate path to xml config file for current hex file.
+        Config file needs to be in the same directory as the hex file."""
         pp = Path(self.filename)
         name = pp.stem
         xmlfile = name.upper() + ".XMLCON"
@@ -308,6 +314,7 @@ class CTD(object):
         self.xmlfile = p.joinpath(xmlfile)
 
     def read_xml_config(self):
+        """Read xml config file."""
         self._find_xmlconfig()
         with open(self.xmlfile) as fd:
             tmp = xmltodict.parse(fd.read())
@@ -395,9 +402,8 @@ class CTD(object):
         self.data.time = self.mattime_to_datetime64(self.data.dtnum)
 
     def _freq2pressure(self, freq, tc, pcal):
-        # calculates pressure given frequency pressure temperature compensation
-        # and pressure calibration structure pcal
-
+        """Calculates pressure given frequency pressure temperature compensation
+        and pressure calibration structure pcal"""
         psi2dbar = 0.689476
 
         Td = pcal.AD590M * tc + pcal.AD590B
@@ -435,7 +441,6 @@ class CTD(object):
 
     def _volt2alt(self, volt, acal):
         """Calculate altimeter from voltage."""
-
         alt = volt * acal.ScaleFactor + acal.Offset
         return alt
 
@@ -463,15 +468,13 @@ class CTD(object):
             print("Warning: {} missing scans".format(np.sum(mmc[fmc])))
 
     def sbetime_to_mattime(self, dt):
+        """Convert SBE time format to matlab time format."""
         dtnum = dt / 24 / 3600 + 719529
         return dtnum
 
     def mattime_to_datetime64(self, dtnum):
+        """Convert Matlab time format to numpy datetime64 time format."""
         dt64 = gv.io.mtlb2datetime(dtnum)
-        # def datetime2matlab(dt):
-        # mdn = dt + datetime.timedelta(days = 366)
-        # frac = (dt-datetime.datetime(dt.year,dt.month,dt.day,0,0,0)).seconds
-        # return mdn.toordinal() + frac / (24.0 * 60.0 * 60.0)
         return dt64
 
     def to_mat(self, matname):
@@ -493,4 +496,16 @@ class CTD(object):
         ds = xr.Dataset(
             data_vars=dict(ds_data), coords={"time": (["time"], self.data["time"])}
         )
+        # set attributes
+        for k, v in self._mapnames_freq.items():
+            ds[k].attrs["SN"] = self.cfgp[v].cal["SerialNumber"]
+            ds[k].attrs["CalDate"] = self.cfgp[v].cal["CalibrationDate"]
+            ds[k].attrs["long_name"] = v
+            ds[k].attrs["units"] = self._mapunits_freq[k]
+        for k, v in self._mapnames_volt.items():
+            if k in ds:
+                ds[k].attrs["SN"] = self.cfgp[v].cal["SerialNumber"]
+                ds[k].attrs["CalDate"] = self.cfgp[v].cal["CalibrationDate"]
+                ds[k].attrs["long_name"] = v
+                ds[k].attrs["units"] = self._mapunits_volt[k]
         return ds
