@@ -1,5 +1,5 @@
 import pathlib
-import pyctdproc as ctd
+import ctdproc as ctd
 
 def test_success():
     assert True

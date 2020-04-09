@@ -1,5 +1,5 @@
-pyctdproc
-=========
+ctdproc
+=======
 
 Libraries for ctd (hex) data processing. Borrows heavily from Jen&Shaun-ware written in Matlab.
 
@@ -15,6 +15,6 @@ python setup.py develop
 
 To import run
 ```
-import pyctdproc
+import ctdproc
 ```
-This will provide several submodules under `pyctdproc`.
+This will provide several submodules under `ctdproc`.

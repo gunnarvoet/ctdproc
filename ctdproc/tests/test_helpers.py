@@ -1,5 +1,5 @@
 import pytest
-from pyctdproc import helpers
+from ctdproc import helpers
 import numpy as np
 
 
