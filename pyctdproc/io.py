@@ -2,16 +2,14 @@
 # coding: utf-8
 import numpy as np
 import xarray as xr
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import gsw
 from pathlib import Path
 import xmltodict
 import pandas as pd
 from munch import munchify, Munch
 import scipy.io as sio
-import datetime
-import gvpy as gv
+
+from .helpers import mtlb2datetime
 
 
 class CTD(object):
@@ -47,9 +45,9 @@ class CTD(object):
         self._mapunits_freq = dict(t1="°C", t2="°C", c1="mS/cm", c2="mS/cm", p="dbar",)
 
         # run all processing steps
-        self.run_calcs()
+        self._run_calcs()
 
-    def run_calcs(self):
+    def _run_calcs(self):
         self.read_xml_config()
         self.parse_hex()
         self.physicalunits()
@@ -357,6 +355,12 @@ class CTD(object):
                             self.cfgp[k]["cal"][ki][i][kli] = float(
                                 self.cfgp[k]["cal"][ki][i][kli]
                             )
+            # We can't have None values in the xarray.Dataset later on
+            # or otherwise it won't properly write to netcdf. Therefore,
+            # convert any None items to 'N/A'
+            for ki, v in self.cfgp[k].cal.items():
+                if v is None:
+                    self.cfgp[k].cal[ki] = 'N/A'
 
     def physicalunits(self):
         # pressure
@@ -440,7 +444,7 @@ class CTD(object):
         return cond
 
     def _volt2alt(self, volt, acal):
-        """Calculate altimeter from voltage."""
+        """Calculate altimeter data from voltage."""
         alt = volt * acal.ScaleFactor + acal.Offset
         return alt
 
@@ -459,7 +463,7 @@ class CTD(object):
         return par
 
     def _check_modcount_errors(self, modcount):
-        # check for modcount errors
+        """Check for modcount errors."""
         dmc = np.diff(modcount)
         mmc = np.mod(dmc, 256)
         fmc = np.squeeze(np.where(mmc - 1))
@@ -474,10 +478,11 @@ class CTD(object):
 
     def mattime_to_datetime64(self, dtnum):
         """Convert Matlab time format to numpy datetime64 time format."""
-        dt64 = gv.io.mtlb2datetime(dtnum)
+        dt64 = mtlb2datetime(dtnum)
         return dt64
 
     def to_mat(self, matname):
+        """Save data in Matlab format."""
         ctdout = self.data.copy()
         ctdout.pop("time")
         # ctdout.pop('matlabtime')
@@ -487,7 +492,13 @@ class CTD(object):
         sio.savemat(matname, ctdout, format="5")
 
     def to_xarray(self):
-        # do something
+        """Convert data into xarray.Dataset.
+
+        Returns
+        -------
+        ds : xarray.Dataset
+            CTD time series in Dataset format.
+        """
         dsout = self.data.copy()
         dsout.pop("time")
         dsout.pop("dtnum")

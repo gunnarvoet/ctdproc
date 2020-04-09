@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name="pyctdproc",
-      version="0.1",
+      version="0.1.0",
       description="Library for CTD data processing",
       author="Gunnar Voet",
       author_email='gvoet@ucsd.edu',
