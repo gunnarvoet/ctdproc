@@ -4,6 +4,8 @@ include HISTORY.rst
 include LICENSE
 include README.rst
 
+include notebooks/ctdproc_example.ipynb
+
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
