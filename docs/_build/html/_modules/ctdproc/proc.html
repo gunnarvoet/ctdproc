@@ -1,0 +1,940 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ctdproc.proc &mdash; ctdproc 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> ctdproc
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/modules.html">ctdproc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ctdproc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>ctdproc.proc</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ctdproc.proc</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span><span class="p">,</span> <span class="n">fft</span><span class="p">,</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">gsw</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">helpers</span><span class="p">,</span> <span class="n">calcs</span>
+
+
+<div class="viewcode-block" id="run_all"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.run_all">[docs]</a><span class="k">def</span> <span class="nf">run_all</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run all standard processing steps on raw CTD time series.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series data structure</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    datad : xarray.Dataset</span>
+<span class="sd">        Downcast binned data</span>
+<span class="sd">    datau : xarray.Dataset</span>
+<span class="sd">        Upcast binned data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_cleanup</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">datad</span><span class="p">,</span> <span class="n">datau</span> <span class="o">=</span> <span class="n">ctd_correction_updn</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">tcfit</span> <span class="o">=</span> <span class="n">tcfit_default</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">datad</span> <span class="o">=</span> <span class="n">ctd_correction2</span><span class="p">(</span><span class="n">datad</span><span class="p">,</span> <span class="n">tcfit</span><span class="p">)</span>
+    <span class="n">datau</span> <span class="o">=</span> <span class="n">ctd_correction2</span><span class="p">(</span><span class="n">datau</span><span class="p">,</span> <span class="n">tcfit</span><span class="p">)</span>
+
+    <span class="n">datad</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">swcalcs</span><span class="p">(</span><span class="n">datad</span><span class="p">)</span>
+    <span class="n">datau</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">swcalcs</span><span class="p">(</span><span class="n">datau</span><span class="p">)</span>
+
+    <span class="n">wthresh</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">datad</span> <span class="o">=</span> <span class="n">ctd_rmloops</span><span class="p">(</span><span class="n">datad</span><span class="p">,</span> <span class="n">wthresh</span><span class="p">)</span>
+    <span class="n">datau</span> <span class="o">=</span> <span class="n">ctd_rmloops</span><span class="p">(</span><span class="n">datau</span><span class="p">,</span> <span class="n">wthresh</span><span class="p">)</span>
+
+    <span class="n">datad</span> <span class="o">=</span> <span class="n">ctd_cleanup2</span><span class="p">(</span><span class="n">datad</span><span class="p">)</span>
+    <span class="n">datau</span> <span class="o">=</span> <span class="n">ctd_cleanup2</span><span class="p">(</span><span class="n">datau</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">datad</span><span class="p">,</span> <span class="n">datau</span></div>
+
+
+<div class="viewcode-block" id="tcfit_default"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.tcfit_default">[docs]</a><span class="k">def</span> <span class="nf">tcfit_default</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get default values for tc fit range depending on depth of cast.</span>
+
+<span class="sd">    Range for tc fit is 200dbar to maximum pressure if the cast is</span>
+<span class="sd">    shallower than 1000dbar, 500dbar to max pressure otherwise.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series data structure</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tcfit : tuple</span>
+<span class="sd">        Upper and lower limit for tc fit in ctd_correction2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+        <span class="n">tcfit</span> <span class="o">=</span> <span class="p">[</span><span class="mi">500</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tcfit</span> <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">data</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">tcfit</span></div>
+
+
+<div class="viewcode-block" id="ctd_cleanup"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_cleanup">[docs]</a><span class="k">def</span> <span class="nf">ctd_cleanup</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clean up CTD raw time series.</span>
+
+<span class="sd">    - despike pressure</span>
+<span class="sd">    - eliminate data near surface</span>
+<span class="sd">    - remove spikes in other data</span>
+<span class="sd">    - remove smaller T, C, glitches</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series data structure</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series data structure</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># despike pressure</span>
+    <span class="n">diffp</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">prodp</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">diffp</span><span class="p">,</span> <span class="n">prodp</span><span class="p">)</span>
+    <span class="n">ipmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># eliminate near-surface data</span>
+    <span class="n">ptop</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">fdeep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="n">ptop</span><span class="p">))</span>
+    <span class="n">ideepstart</span><span class="p">,</span> <span class="n">ideepstop</span><span class="p">,</span> <span class="n">ideeplen</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">findsegments</span><span class="p">(</span><span class="n">fdeep</span><span class="p">)</span>
+    <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">ideepstart</span><span class="p">[</span><span class="n">ideepstart</span> <span class="o">&lt;</span> <span class="n">ipmax</span><span class="p">])</span>
+    <span class="n">jj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">ideepstop</span><span class="p">[</span><span class="n">ideepstop</span> <span class="o">&gt;=</span> <span class="n">ipmax</span><span class="p">])</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># remove spikes in temperature</span>
+    <span class="n">ib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t1</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">))</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">t1</span><span class="p">[</span><span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">ib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t2</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">))</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">t2</span><span class="p">[</span><span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># remove out of range values</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_preen</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="c1"># no trans, fl ***</span>
+
+    <span class="c1"># remove nans at start</span>
+    <span class="n">fnan1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c1</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+    <span class="n">fnan2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c2</span><span class="o">.</span><span class="n">data</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equiv</span><span class="p">(</span><span class="n">fnan1</span><span class="p">,</span> <span class="n">fnan2</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;warning: NaNs index different in data.c1 and data.c2&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fnan1</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">istart</span><span class="p">,</span> <span class="n">istop</span><span class="p">,</span> <span class="n">ilen</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">findsegments</span><span class="p">(</span><span class="n">fnan1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">istart</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">|</span> <span class="n">istart</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;warning: more NaNs&quot;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">istop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ctd_cleanup2"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_cleanup2">[docs]</a><span class="k">def</span> <span class="nf">ctd_cleanup2</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;More cleaning and calculation of derived variables.&quot;&quot;&quot;</span>
+
+    <span class="c1"># remove spikes in temperature</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;t1&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;t2&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+
+    <span class="c1"># despike T, C</span>
+    <span class="n">prodc</span> <span class="o">=</span> <span class="mf">5e-7</span>
+    <span class="n">diffc</span> <span class="o">=</span> <span class="mf">1e-1</span>
+    <span class="n">prodt</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="n">difft</span> <span class="o">=</span> <span class="mf">1e-1</span>
+    <span class="n">ibefore</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">iafter</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;c1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="n">diffc</span><span class="p">,</span> <span class="n">prodc</span><span class="p">,</span> <span class="n">ibefore</span><span class="p">,</span> <span class="n">iafter</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;c2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c2</span><span class="p">,</span> <span class="n">diffc</span><span class="p">,</span> <span class="n">prodc</span><span class="p">,</span> <span class="n">ibefore</span><span class="p">,</span> <span class="n">iafter</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t1</span><span class="p">,</span> <span class="n">difft</span><span class="p">,</span> <span class="n">prodt</span><span class="p">,</span> <span class="n">ibefore</span><span class="p">,</span> <span class="n">iafter</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;t2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t2</span><span class="p">,</span> <span class="n">difft</span><span class="p">,</span> <span class="n">prodt</span><span class="p">,</span> <span class="n">ibefore</span><span class="p">,</span> <span class="n">iafter</span><span class="p">)</span>
+
+    <span class="c1"># Calculate salinity (both absolute and practical)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">calc_sal</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># despike s</span>
+    <span class="c1"># remove spikes</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;s2&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;SA1&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;SA2&quot;</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+    <span class="c1"># remove out of bounds data</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_remove_out_of_bounds</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="n">bmin</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">bmax</span><span class="o">=</span><span class="mi">38</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_remove_out_of_bounds</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;s2&quot;</span><span class="p">,</span> <span class="n">bmin</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">bmax</span><span class="o">=</span><span class="mi">38</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_remove_out_of_bounds</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;SA1&quot;</span><span class="p">,</span> <span class="n">bmin</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">bmax</span><span class="o">=</span><span class="mi">38</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ctd_remove_out_of_bounds</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;SA2&quot;</span><span class="p">,</span> <span class="n">bmin</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">bmax</span><span class="o">=</span><span class="mi">38</span><span class="p">)</span>
+    <span class="c1"># despike</span>
+    <span class="n">prods</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="n">diffs</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">ibefore</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">iafter</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="s1">&#39;s2&#39;</span><span class="p">,</span> <span class="s1">&#39;SA1&#39;</span><span class="p">,</span> <span class="s1">&#39;SA2&#39;</span><span class="p">]:</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">],</span> <span class="n">diffs</span><span class="p">,</span> <span class="n">prods</span><span class="p">,</span> <span class="n">ibefore</span><span class="p">,</span> <span class="n">iafter</span><span class="p">)</span>
+    
+    <span class="c1"># calculate potential/conservative temperature, potential density anomaly</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">calc_temp</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">calc_sigma</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ctd_despike"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_despike">[docs]</a><span class="k">def</span> <span class="nf">ctd_despike</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">spike_threshold</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set spikes to NaN.&quot;&quot;&quot;</span>
+    <span class="n">absdiff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+    <span class="c1"># Using np.greater instead of the &gt; operator as we can use the where option</span>
+    <span class="c1"># and avoid the warning when nans are compared to a number. It broadcasts</span>
+    <span class="c1"># to the original array size.</span>
+    <span class="n">ib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="n">absdiff</span><span class="p">,</span> <span class="n">spike_threshold</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">absdiff</span><span class="p">)))</span>
+    <span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ctd_remove_out_of_bounds"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_remove_out_of_bounds">[docs]</a><span class="k">def</span> <span class="nf">ctd_remove_out_of_bounds</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">bmin</span><span class="p">,</span> <span class="n">bmax</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove out of bounds data.&quot;&quot;&quot;</span>
+    <span class="n">ib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">bmax</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">])))</span>
+                <span class="o">|</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">less</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">],</span> <span class="n">bmin</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">])))</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">][</span><span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ctd_preen"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_preen">[docs]</a><span class="k">def</span> <span class="nf">ctd_preen</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove spikes in p, t1, t2, c1, c2.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        Dataset with CTD time series.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        Cleaned dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">preen</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6200</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">preen</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t1</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;t2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">preen</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t2</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;c1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">preen</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c1</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="s2">&quot;c2&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">preen</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c2</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="c1"># TODO: remove spikes in oxygen, trans, fl in volts.</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ctd_correction_updn"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_correction_updn">[docs]</a><span class="k">def</span> <span class="nf">ctd_correction_updn</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Separate into down/up-casts and apply corrections.</span>
+
+<span class="sd">    - tc lag correction</span>
+<span class="sd">    - thermal mass correction</span>
+<span class="sd">    - lowpass-filter T, C, oxygen</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    datad : xarray.Dataset</span>
+<span class="sd">        CTD time series for downcast</span>
+<span class="sd">    datau : xarray.Dataset</span>
+<span class="sd">        CTD time series for upcast</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">ipmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">datad</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ipmax</span><span class="p">))</span>
+    <span class="n">datau</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">ipmax</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">datad</span><span class="p">,</span> <span class="n">datau</span></div>
+
+
+<div class="viewcode-block" id="ctd_correction2"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_correction2">[docs]</a><span class="k">def</span> <span class="nf">ctd_correction2</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">tcfit</span><span class="p">,</span> <span class="n">plot_spectra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bring temperature and conductivity in phase.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    var : dtype</span>
+<span class="sd">        description</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    var : dtype</span>
+<span class="sd">        description</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># remove spikes</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">,</span> <span class="s2">&quot;t2&quot;</span><span class="p">,</span> <span class="s2">&quot;c1&quot;</span><span class="p">,</span> <span class="s2">&quot;c2&quot;</span><span class="p">]:</span>
+        <span class="n">ib</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">field</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">field</span><span class="p">][</span><span class="n">ib</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># ---Spectral Analysis of Raw Data---</span>
+    <span class="c1"># 24Hz data</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">24</span>
+    <span class="c1"># number of points per segment</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">9</span>
+
+    <span class="c1"># only data within tcfit range.</span>
+    <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">((</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="n">tcfit</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">&lt;</span> <span class="n">tcfit</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+    <span class="n">i1</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">i2</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">i2</span> <span class="o">-</span> <span class="n">i1</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="c1"># Truncate to be multiple of N elements long</span>
+    <span class="n">i2</span> <span class="o">=</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="c1"># number of segments = dof/2</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="c1"># Number of degrees of freedom (power of 2)</span>
+    <span class="n">dof</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span>
+    <span class="c1"># Frequency resolution at dof degrees of freedom.</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># fft of each segment (row). Data are detrended, then windowed.</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">triang</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+    <span class="n">At1</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t1</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span>
+    <span class="p">)</span>
+    <span class="n">At2</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">t2</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span>
+    <span class="p">)</span>
+    <span class="n">Ac1</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c1</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span>
+    <span class="p">)</span>
+    <span class="n">Ac2</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span>
+        <span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">c2</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Positive frequencies only</span>
+    <span class="n">At1</span> <span class="o">=</span> <span class="n">At1</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">At2</span> <span class="o">=</span> <span class="n">At2</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">Ac1</span> <span class="o">=</span> <span class="n">Ac1</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">Ac2</span> <span class="o">=</span> <span class="n">Ac2</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+
+    <span class="c1"># Frequency</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span> <span class="o">/</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">fold</span> <span class="o">=</span> <span class="n">f</span>
+
+    <span class="c1"># Spectral Estimates. Note: In Matlab, At1*conj(At1) is not complex anymore.</span>
+    <span class="c1"># Here, it is still a complex number but the imaginary part is zero.</span>
+    <span class="c1"># We keep only the real part to stay consistent.</span>
+    <span class="n">Et1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">At1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">At1</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">Et2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">At2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">At2</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">Ec1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">Ac1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ac1</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+    <span class="n">Ec2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">Ac2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ac2</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># Cross Spectral Estimates</span>
+    <span class="n">Ct1c1</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">At1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ac1</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">Ct2c2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">At2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ac2</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Squared Coherence Estimates</span>
+    <span class="n">Coht1c1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct1c1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ct1c1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Et1</span> <span class="o">*</span> <span class="n">Ec1</span><span class="p">))</span>
+    <span class="n">Coht2c2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct2c2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ct2c2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Et2</span> <span class="o">*</span> <span class="n">Ec2</span><span class="p">))</span>
+
+    <span class="c1"># Cross-spectral Phase Estimates</span>
+    <span class="n">Phit1c1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Ct1c1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct1c1</span><span class="p">))</span>
+    <span class="n">Phit2c2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Ct2c2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct2c2</span><span class="p">))</span>
+
+    <span class="c1"># ---Determine tau and L---</span>
+    <span class="c1"># tau is the thermistor time constant (sec)</span>
+    <span class="c1"># L is the lag of t behind c due to sensor separation (sec)</span>
+    <span class="c1"># Matrix of weights based on squared coherence.</span>
+    <span class="n">W1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Coht1c1</span><span class="p">)</span>
+    <span class="n">W2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Coht2c2</span><span class="p">)</span>
+
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">fmin</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">atanfit</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Phit1c1</span><span class="p">,</span> <span class="n">W1</span><span class="p">),</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">fmin</span><span class="p">(</span>
+        <span class="n">func</span><span class="o">=</span><span class="n">helpers</span><span class="o">.</span><span class="n">atanfit</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Phit2c2</span><span class="p">,</span> <span class="n">W2</span><span class="p">),</span> <span class="n">disp</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="n">tau1</span> <span class="o">=</span> <span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">tau2</span> <span class="o">=</span> <span class="n">x2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">L1</span> <span class="o">=</span> <span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">L2</span> <span class="o">=</span> <span class="n">x2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;1: tau = </span><span class="si">{:1.4f}</span><span class="s2">s, lag = </span><span class="si">{:1.4f}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tau1</span><span class="p">,</span> <span class="n">L1</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;2: tau = </span><span class="si">{:1.4f}</span><span class="s2">s, lag = </span><span class="si">{:1.4f}</span><span class="s2">s&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tau2</span><span class="p">,</span> <span class="n">L2</span><span class="p">))</span>
+
+    <span class="c1"># ---Apply Phase Correction and LP Filter---</span>
+    <span class="n">ii</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">i1</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">i2</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">i2</span> <span class="o">-</span> <span class="n">i1</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="c1"># Truncate to be multiple of N elements long</span>
+    <span class="n">i2</span> <span class="o">=</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="c1"># number of segments = dof/2</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Number of degrees of freedom (power of 2)</span>
+    <span class="n">dof</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span>
+    <span class="c1"># Frequency resolution at dof degrees of freedom.</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># Transfer function</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">ifftshift</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">N</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span> <span class="o">/</span> <span class="n">dt</span><span class="p">)</span>
+    <span class="n">H1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">tau1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">L1</span><span class="p">)</span>
+    <span class="n">H2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">tau2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f</span> <span class="o">*</span> <span class="n">L2</span><span class="p">)</span>
+
+    <span class="c1"># Low Pass Filter</span>
+    <span class="n">f0</span> <span class="o">=</span> <span class="mi">6</span>  <span class="c1"># Cutoff frequency</span>
+    <span class="n">LP</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">f</span> <span class="o">/</span> <span class="n">f0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">6</span><span class="p">)</span>
+
+    <span class="c1"># Restructure data with overlapping segments.</span>
+    <span class="c1"># Staggered segments</span>
+    <span class="nb">vars</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;t1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;t2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;c2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trans&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fl&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;par&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;oxygen1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;oxygen2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ph&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">vard</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">vard</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+            <span class="n">vard</span><span class="p">[</span><span class="n">vi</span><span class="p">][:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">vard</span><span class="p">[</span><span class="n">vi</span><span class="p">][</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">i1</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="p">:</span> <span class="n">i2</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="n">time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">lon</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">lat</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="p">]</span>
+
+    <span class="c1"># FFTs of staggered segments (each row)</span>
+    <span class="n">Ad</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">Ad</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">vard</span><span class="p">[</span><span class="n">vi</span><span class="p">])</span>
+
+    <span class="c1"># Corrected Fourier transforms of temperature.</span>
+    <span class="n">Ad</span><span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ad</span><span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">((</span><span class="n">H1</span> <span class="o">*</span> <span class="n">LP</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">Ad</span><span class="p">[</span><span class="s2">&quot;t2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ad</span><span class="p">[</span><span class="s2">&quot;t2&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">((</span><span class="n">H1</span> <span class="o">*</span> <span class="n">LP</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+    <span class="c1"># LP filter remaining variables</span>
+    <span class="n">vars2</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;c1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;c2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;p&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trans&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;fl&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;par&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alt&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;oxygen1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;oxygen2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ph&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">vars2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">Ad</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">=</span> <span class="n">Ad</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">LP</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+    <span class="c1"># Inverse transforms of corrected temperature</span>
+    <span class="c1"># and low passed other variables</span>
+    <span class="n">Adi</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">Adi</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">Ad</span><span class="p">[</span><span class="n">vi</span><span class="p">]))</span>
+            <span class="n">Adi</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Adi</span><span class="p">[</span><span class="n">vi</span><span class="p">][:,</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">))],</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+            <span class="p">)</span>
+
+    <span class="n">time</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">lon</span> <span class="o">=</span> <span class="n">lon</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">lat</span> <span class="o">=</span> <span class="n">lat</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+
+    <span class="c1"># Generate output structure. Copy attributes over.</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="n">time</span><span class="p">})</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">lon</span><span class="p">)</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">lat</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="n">Adi</span><span class="p">[</span><span class="n">vi</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">tau1</span><span class="o">=</span><span class="n">tau1</span><span class="p">,</span> <span class="n">tau2</span><span class="o">=</span><span class="n">tau2</span><span class="p">,</span> <span class="n">L1</span><span class="o">=</span><span class="n">L1</span><span class="p">,</span> <span class="n">L2</span><span class="o">=</span><span class="n">L2</span><span class="p">)</span>
+
+    <span class="c1"># ---Recalculate and replot spectra, coherence and phase---</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">Adi</span><span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>  <span class="c1"># Now N elements shorter</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="n">Adi</span><span class="p">[</span><span class="s2">&quot;t2&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">Adi</span><span class="p">[</span><span class="s2">&quot;c1&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">Adi</span><span class="p">[</span><span class="s2">&quot;c2&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Adi</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">][</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)]</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">i2</span> <span class="o">-</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">N</span>  <span class="c1"># number of segments = dof/2</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+    <span class="n">dof</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">m</span>  <span class="c1"># Number of degrees of freedom (power of 2)</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span> <span class="o">*</span> <span class="n">dt</span><span class="p">)</span>  <span class="c1"># Frequency resolution at dof degrees of freedom.</span>
+
+    <span class="n">window</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">triang</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+    <span class="n">At1</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span><span class="p">)</span>
+    <span class="n">At2</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">t2</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span><span class="p">)</span>
+    <span class="n">Ac1</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span><span class="p">)</span>
+    <span class="n">Ac2</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">detrend</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">c2</span><span class="p">,</span> <span class="n">newshape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">N</span><span class="p">)))</span> <span class="o">*</span> <span class="n">window</span><span class="p">)</span>
+
+    <span class="c1"># Positive frequencies only</span>
+    <span class="n">At1</span> <span class="o">=</span> <span class="n">At1</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">At2</span> <span class="o">=</span> <span class="n">At2</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">Ac1</span> <span class="o">=</span> <span class="n">Ac1</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">Ac2</span> <span class="o">=</span> <span class="n">Ac2</span><span class="p">[:,</span> <span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)]</span>
+
+    <span class="n">Et1n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">At1</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">Et2n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">At2</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">Ec1n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">Ac1</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">Ec2n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">Ac2</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">N</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)])</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="c1"># Cross Spectral Estimates</span>
+    <span class="n">Ct1c1n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">At1</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ac1</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">Ct2c2n</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">At2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ac2</span><span class="p">)</span> <span class="o">/</span> <span class="n">df</span> <span class="o">/</span> <span class="n">N</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Squared Coherence Estimates</span>
+    <span class="n">Coht1c1n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct1c1n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ct1c1n</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Et1n</span> <span class="o">*</span> <span class="n">Ec1n</span><span class="p">))</span>
+    <span class="n">Coht2c2n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct2c2n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Ct2c2n</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Et2n</span> <span class="o">*</span> <span class="n">Ec2n</span><span class="p">))</span>
+    <span class="c1"># 95% confidence bound</span>
+    <span class="c1"># epsCoht1c1n = np.sqrt(2) * (1 - Coht1c1n) / np.sqrt(Coht1c1n) / np.sqrt(m)</span>
+    <span class="c1"># epsCoht2c2n = np.sqrt(2) * (1 - Coht2c2n) / np.sqrt(Coht2c2n) / np.sqrt(m)</span>
+    <span class="c1"># 95% significance level for coherence from Gille notes</span>
+    <span class="n">betan</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Cross-spectral Phase Estimates</span>
+    <span class="n">Phit1c1n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Ct1c1n</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct1c1n</span><span class="p">))</span>
+    <span class="n">Phit2c2n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">Ct2c2n</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">Ct2c2n</span><span class="p">))</span>
+    <span class="c1"># 95% error bound</span>
+    <span class="c1"># epsPhit1c1n = np.arcsin(</span>
+    <span class="c1">#     stats.t.ppf(0.05, dof) * np.sqrt((1 - Coht1c1n) / (dof * Coht1c1n))</span>
+    <span class="c1"># )</span>
+    <span class="c1"># epsPhit1c2n = np.arcsin(</span>
+    <span class="c1">#     stats.t.ppf(0.05, dof) * np.sqrt((1 - Coht2c2n) / (dof * Coht2c2n))</span>
+    <span class="c1"># )</span>
+
+    <span class="k">if</span> <span class="n">plot_spectra</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+            <span class="n">nrows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span> <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="n">ax0</span><span class="p">,</span> <span class="n">ax1</span><span class="p">,</span> <span class="n">ax2</span><span class="p">,</span> <span class="n">ax3</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Et1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;1 uncorrected&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Et2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;2 uncorrected&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.8&quot;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Et1n</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;sensor 1&quot;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Et2n</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;sensor 2&quot;</span><span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">yscale</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
+            <span class="n">xscale</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;frequency [Hz]&quot;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;spectral density [$^{\circ}$C$^2$/Hz]&quot;</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;temperature spectra&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">fn</span><span class="p">[</span><span class="mi">50</span><span class="p">],</span> <span class="n">fn</span><span class="p">[</span><span class="mi">50</span><span class="p">]],</span>
+            <span class="p">[</span>
+                <span class="n">dof</span> <span class="o">*</span> <span class="n">Et1n</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span> <span class="o">/</span> <span class="n">stats</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mf">0.05</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dof</span><span class="p">),</span>
+                <span class="n">dof</span> <span class="o">*</span> <span class="n">Et1n</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span> <span class="o">/</span> <span class="n">stats</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dof</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax0</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Ec1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;1 uncorrected&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Ec2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;2 uncorrected&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.8&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Ec1n</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Ec2n</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;2&quot;</span><span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">yscale</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
+            <span class="n">xscale</span><span class="o">=</span><span class="s2">&quot;log&quot;</span><span class="p">,</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;frequency [Hz]&quot;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;spectral density [mmho$^2$/cm$^2$/Hz]&quot;</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;conductivity spectra&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">fn</span><span class="p">[</span><span class="mi">50</span><span class="p">],</span> <span class="n">fn</span><span class="p">[</span><span class="mi">50</span><span class="p">]],</span>
+            <span class="p">[</span>
+                <span class="n">dof</span> <span class="o">*</span> <span class="n">Ec1n</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span> <span class="o">/</span> <span class="n">stats</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mf">0.05</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dof</span><span class="p">),</span>
+                <span class="n">dof</span> <span class="o">*</span> <span class="n">Ec1n</span><span class="p">[</span><span class="mi">100</span><span class="p">]</span> <span class="o">/</span> <span class="n">stats</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">chi2</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.05</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dof</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Coherence between Temperature and Conductivity</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Coht1c1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Coht2c2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.8&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Coht1c1n</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Coht2c2n</span><span class="p">)</span>
+
+        <span class="c1"># ax.plot(fn, Coht1c1 / (1 + 2 * epsCoht1c1), color=&quot;b&quot;, linewidth=0.5, alpha=0.2)</span>
+        <span class="c1"># ax.plot(fn, Coht1c1 / (1 - 2 * epsCoht1c1), color=&quot;b&quot;, linewidth=0.5, alpha=0.2)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">betan</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">size</span><span class="p">),</span> <span class="s2">&quot;k--&quot;</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;frequency [Hz]&quot;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;squared coherence&quot;</span><span class="p">,</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">),</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;t/c coherence&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Phase between Temperature and Conductivity</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Phit1c1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fold</span><span class="p">,</span> <span class="n">Phit2c2</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.8&quot;</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Phit1c1n</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">Phit2c2n</span><span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">set</span><span class="p">(</span>
+            <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;frequency [Hz]&quot;</span><span class="p">,</span>
+            <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;phase [rad]&quot;</span><span class="p">,</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+            <span class="n">title</span><span class="o">=</span><span class="s2">&quot;t/c phase&quot;</span><span class="p">,</span>
+            <span class="c1">#     xscale=&quot;log&quot;,</span>
+        <span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">fold</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">fold</span> <span class="o">*</span> <span class="n">x1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">fold</span> <span class="o">*</span> <span class="n">x1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;k--&quot;</span>
+        <span class="p">)</span>
+        <span class="n">ax3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">fold</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">fold</span> <span class="o">*</span> <span class="n">x2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">fold</span> <span class="o">*</span> <span class="n">x2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;k--&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">plot_path</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">plot_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="ctd_rmloops"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_rmloops">[docs]</a><span class="k">def</span> <span class="nf">ctd_rmloops</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">wthresh</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Eliminate depth loops in CTD data based on sinking velocity.</span>
+
+<span class="sd">    All data variables are set to NaN within depth loops.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series dataset</span>
+<span class="sd">    wthresh : float</span>
+<span class="sd">        Sinking velocity threshold [m/s], default 0.1</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : xarray.Dataset</span>
+<span class="sd">        CTD time series dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tsmooth</span> <span class="o">=</span> <span class="mf">0.25</span>  <span class="c1"># seconds</span>
+    <span class="n">fs</span> <span class="o">=</span> <span class="mi">24</span>  <span class="c1"># Hz</span>
+    <span class="n">pn</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">size</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">wsink</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">tsmooth</span><span class="p">,</span> <span class="n">fs</span><span class="p">)</span>  <span class="c1"># down/up +/-ve</span>
+    <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="c1"># up or downcast?</span>
+    <span class="n">pol</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">size</span><span class="p">)),</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">dn</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">pol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">dn</span><span class="p">:</span>
+        <span class="c1"># downcast</span>
+        <span class="n">flp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">w</span> <span class="o">&lt;</span> <span class="n">wthresh</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">flp</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">,</span> <span class="n">ilen</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">findsegments</span><span class="p">(</span><span class="n">flp</span><span class="p">)</span>
+            <span class="n">nlp</span> <span class="o">=</span> <span class="n">ia</span><span class="o">.</span><span class="n">size</span>
+            <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">):</span>
+                <span class="n">pmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">[:</span><span class="n">stop</span><span class="p">])</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">pm</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">pmi</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">pmi</span><span class="p">:]</span> <span class="o">&lt;</span> <span class="n">pm</span><span class="p">))</span>
+                <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iloop</span><span class="p">,</span> <span class="n">pmi</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iloop</span><span class="p">,</span> <span class="n">pmi</span> <span class="o">+</span> <span class="n">tmp</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">iloop</span> <span class="o">=</span> <span class="n">iloop</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nlp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># upcast</span>
+        <span class="n">flp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">w</span> <span class="o">&gt;</span> <span class="o">-</span><span class="n">wthresh</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">flp</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">,</span> <span class="n">ilen</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">findsegments</span><span class="p">(</span><span class="n">flp</span><span class="p">)</span>
+            <span class="n">nlp</span> <span class="o">=</span> <span class="n">ia</span><span class="o">.</span><span class="n">size</span>
+            <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ia</span><span class="p">,</span> <span class="n">ib</span><span class="p">):</span>
+                <span class="n">pmi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">[:</span><span class="n">stop</span><span class="p">])</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">pm</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">pmi</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">[:</span><span class="n">pmi</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">pm</span><span class="p">))</span>
+                <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iloop</span><span class="p">,</span> <span class="n">pmi</span><span class="p">)</span>
+                <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">iloop</span><span class="p">,</span> <span class="n">pmi</span> <span class="o">-</span> <span class="n">tmp</span><span class="p">)</span>
+            <span class="n">iloop</span> <span class="o">=</span> <span class="n">iloop</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int64&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nlp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">iloop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+
+    <span class="n">iloop2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">iloop</span><span class="p">)</span>
+
+    <span class="c1"># get data variable names</span>
+    <span class="n">varnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">rmitem</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">rmitem</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">:</span>
+            <span class="n">varnames</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">rmitem</span><span class="p">)</span>
+    <span class="c1"># set loops to NaN</span>
+    <span class="k">for</span> <span class="n">varn</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">varn</span><span class="p">][</span><span class="n">iloop2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="ctd_bincast"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.proc.ctd_bincast">[docs]</a><span class="k">def</span> <span class="nf">ctd_bincast</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dz</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Depth-bin CTD time series.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : xr.Dataset</span>
+<span class="sd">        CTD time series</span>
+<span class="sd">    dz : float</span>
+<span class="sd">        Bin size [m]</span>
+<span class="sd">    zmin : float</span>
+<span class="sd">        Minimum bin depth center [m]</span>
+<span class="sd">    zmax : float</span>
+<span class="sd">        Maximum bin depth center [m]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    data : xr.Dataset</span>
+<span class="sd">        Depth-binned CTD profile</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dz2</span> <span class="o">=</span> <span class="n">dz</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">zbin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">zmin</span><span class="o">-</span><span class="n">dz2</span><span class="p">,</span> <span class="n">zmax</span><span class="o">+</span><span class="n">dz</span><span class="o">+</span><span class="n">dz2</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+    <span class="n">zbinlabel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span><span class="o">+</span><span class="n">dz</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+
+    <span class="c1"># prepare dataset</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="s1">&#39;depth&#39;</span><span class="p">})</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">reset_coords</span><span class="p">()</span>
+
+    <span class="c1"># need to bin time separately, not sure why</span>
+    <span class="n">btime</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">zbin</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">zbinlabel</span><span class="p">,</span>
+                       <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="c1"># bin all variables</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">zbin</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">zbinlabel</span><span class="p">,</span>
+                       <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+    <span class="c1"># organize</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">btime</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">set_coords</span><span class="p">([</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">rename_dims</span><span class="p">({</span><span class="s1">&#39;depth_bins&#39;</span><span class="p">:</span> <span class="s1">&#39;z&#39;</span><span class="p">})</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;depth_bins&#39;</span><span class="p">:</span> <span class="s1">&#39;depth&#39;</span><span class="p">})</span>
+
+    <span class="c1"># copy attributes</span>
+    <span class="c1"># get data variable names</span>
+    <span class="n">varnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+    <span class="k">for</span> <span class="n">vari</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">:</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">vari</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">vari</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
+    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;depth&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">}</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span>
+
+    <span class="c1"># recalculate pressure from depth bins</span>
+    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s1">&#39;z&#39;</span><span class="p">],</span> <span class="n">gsw</span><span class="o">.</span><span class="n">p_from_z</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">lat</span><span class="p">))</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dbar&#39;</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Gunnar Voet
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,720 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ctdproc.io &mdash; ctdproc 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> ctdproc
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/modules.html">ctdproc</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../authors.html">Credits</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">History</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../notes.html">Notes</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ctdproc</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>ctdproc.io</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ctdproc.io</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">xmltodict</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">munch</span> <span class="kn">import</span> <span class="n">munchify</span><span class="p">,</span> <span class="n">Munch</span>
+<span class="kn">import</span> <span class="nn">scipy.io</span> <span class="k">as</span> <span class="nn">sio</span>
+
+<span class="kn">from</span> <span class="nn">.helpers</span> <span class="kn">import</span> <span class="n">mtlb2datetime</span>
+
+
+<div class="viewcode-block" id="CTD"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD">[docs]</a><span class="k">class</span> <span class="nc">CTD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converter for Seabird CTD data in hex format. Initialize with full path to hex file.</span>
+<span class="sd">    xml config file needs to be located in the same directory.</span>
+
+<span class="sd">    TODO:</span>
+<span class="sd">      - Add oxygen hysteresis</span>
+<span class="sd">      - Convert fluorometer voltage</span>
+<span class="sd">      - Profile editing and binning</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_volt</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">oxygen</span><span class="o">=</span><span class="s2">&quot;OxygenSensor&quot;</span><span class="p">,</span>
+            <span class="n">alt</span><span class="o">=</span><span class="s2">&quot;AltimeterSensor&quot;</span><span class="p">,</span>
+            <span class="n">spar</span><span class="o">=</span><span class="s2">&quot;SPAR_Sensor&quot;</span><span class="p">,</span>
+            <span class="n">fl</span><span class="o">=</span><span class="s2">&quot;FluoroSeapointSensor&quot;</span><span class="p">,</span>
+            <span class="n">par</span><span class="o">=</span><span class="s2">&quot;PAR_BiosphericalLicorChelseaSensor&quot;</span><span class="p">,</span>
+            <span class="n">trans</span><span class="o">=</span><span class="s2">&quot;WET_LabsCStar&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mapunits_volt</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">oxygen</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">alt</span><span class="o">=</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="n">spar</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">fl</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">par</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_freq</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">t1</span><span class="o">=</span><span class="s2">&quot;TemperatureSensor1&quot;</span><span class="p">,</span>
+            <span class="n">t2</span><span class="o">=</span><span class="s2">&quot;TemperatureSensor2&quot;</span><span class="p">,</span>
+            <span class="n">c1</span><span class="o">=</span><span class="s2">&quot;ConductivitySensor1&quot;</span><span class="p">,</span>
+            <span class="n">c2</span><span class="o">=</span><span class="s2">&quot;ConductivitySensor2&quot;</span><span class="p">,</span>
+            <span class="n">p</span><span class="o">=</span><span class="s2">&quot;PressureSensor&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mapunits_freq</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">t1</span><span class="o">=</span><span class="s2">&quot;°C&quot;</span><span class="p">,</span> <span class="n">t2</span><span class="o">=</span><span class="s2">&quot;°C&quot;</span><span class="p">,</span> <span class="n">c1</span><span class="o">=</span><span class="s2">&quot;mS/cm&quot;</span><span class="p">,</span> <span class="n">c2</span><span class="o">=</span><span class="s2">&quot;mS/cm&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="s2">&quot;dbar&quot;</span><span class="p">,)</span>
+
+        <span class="c1"># run all processing steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run_calcs</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_run_calcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_xml_config</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_hex</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">physicalunits</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_detect_missing_word</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sometimes there is no SPAR sensor, in this case one hex word may be missing.</span>
+<span class="sd">        It lives on voltage channel 9.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="o">~</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;cfgp&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read_xml_config</span><span class="p">()</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="mi">14</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">&quot;@index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+            <span class="ow">and</span> <span class="s2">&quot;SPAR_Sensor&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">&quot;@index&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="o">=</span> <span class="o">-</span><span class="mi">6</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="CTD.parse_hex"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.parse_hex">[docs]</a>    <span class="k">def</span> <span class="nf">parse_hex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Generate data structure for converted data: 5 freq, 8 voltage channels</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;f</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+            <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;v</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;modcount&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;spar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;pst&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;ctdstatus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detect_missing_word</span><span class="p">()</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;rt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fin</span><span class="p">:</span>
+            <span class="c1"># read header</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">fin</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;*&quot;</span><span class="p">:</span>
+                    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;header&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">l</span>
+                    <span class="k">if</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;*    &quot;</span><span class="p">:</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="c1"># read data</span>
+            <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">fin</span><span class="p">:</span>
+                <span class="c1"># parse frequency channels</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">tmp</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="s2">&quot;f&quot;</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+                        <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="n">tmp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hexword2freq</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="mi">6</span><span class="p">)]))</span>
+                <span class="c1"># parse voltage channels</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+                    <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexword2volt</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="nb">slice</span><span class="p">((</span><span class="n">i</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="mi">6</span><span class="p">)])</span>
+                    <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;v</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span>
+                    <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;v</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span>
+                <span class="c1"># parse other</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;modcount&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="mi">78</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="p">:</span> <span class="mi">80</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span>
+                        <span class="n">l</span><span class="p">[</span><span class="mi">86</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="p">:</span> <span class="mi">88</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">l</span><span class="p">[</span><span class="mi">84</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="p">:</span> <span class="mi">86</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">l</span><span class="p">[</span><span class="mi">82</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="p">:</span> <span class="mi">84</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="n">l</span><span class="p">[</span><span class="mi">80</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="p">:</span> <span class="mi">82</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">],</span>
+                        <span class="mi">16</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">pst</span><span class="p">,</span> <span class="n">ctdstatus</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexword2pstat</span><span class="p">(</span>
+                    <span class="n">l</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">74</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">,</span> <span class="mi">78</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">)]</span>
+                <span class="p">)</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;pst&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pst</span><span class="p">)</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;ctdstatus&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ctdstatus</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;spar&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hexword2spar</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="mi">57</span><span class="p">,</span> <span class="mi">60</span><span class="p">)]))</span>
+                <span class="n">b</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexword2lonlat</span><span class="p">(</span>
+                    <span class="n">l</span><span class="p">[</span><span class="mi">60</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span> <span class="p">:</span> <span class="mi">74</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hexoffset</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lon</span><span class="p">)</span>
+                <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lat</span><span class="p">)</span>
+
+            <span class="c1"># generate output array</span>
+            <span class="c1"># frequency variables are always there</span>
+            <span class="n">freqvars</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;t1&quot;</span><span class="p">,</span> <span class="s2">&quot;c1&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;t2&quot;</span><span class="p">,</span> <span class="s2">&quot;c2&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">freqvars</span><span class="p">):</span>
+                <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;f</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">)])</span>
+            <span class="c1"># voltage variables. see which ones we have</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_volt</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">channel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="s2">&quot;@index&quot;</span><span class="p">])</span>
+                    <span class="n">vchannel</span> <span class="o">=</span> <span class="n">channel</span> <span class="o">-</span> <span class="mi">5</span>
+                    <span class="k">if</span> <span class="n">vchannel</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;v</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vchannel</span><span class="p">)])</span>
+                    <span class="k">elif</span> <span class="n">vchannel</span> <span class="o">==</span> <span class="mi">9</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;spar&quot;</span><span class="p">:</span>
+                        <span class="n">out</span><span class="p">[</span><span class="s2">&quot;spar&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;spar&quot;</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;pst&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;pst&quot;</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;ctdstatus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;ctdstatus&quot;</span><span class="p">]</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;modcount&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;modcount&quot;</span><span class="p">])</span>
+            <span class="n">out</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span> <span class="o">=</span> <span class="n">munchify</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_hexword2freq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hex_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert Seabird hex data to frequency</span>
+<span class="sd">        each byte is given as two hex digits</span>
+<span class="sd">        each SB freq word is 3 bytes</span>
+<span class="sd">        calculates freq from 3 byte word</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hex : str</span>
+<span class="sd">            6 character long hex string</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        f : float</span>
+<span class="sd">            frequency</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="mi">256</span>
+            <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+            <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">4</span><span class="p">:],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">/</span> <span class="mi">256</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">def</span> <span class="nf">_hexword2volt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hex_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert Seabird hex data to voltage</span>
+<span class="sd">        each byte is given as two hex digits</span>
+<span class="sd">        each SB voltage is 1.5 words (8 MSB + 4 LSB)</span>
+<span class="sd">        calculates 2 voltages from 3 byte word</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hex_str : str</span>
+<span class="sd">            6 character long hex str</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        v1, v2 : float</span>
+<span class="sd">            voltages for 2 channels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">byte1</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+        <span class="n">byte2</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+        <span class="n">byte3</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+
+        <span class="n">v1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">byte1</span> <span class="o">+</span> <span class="n">byte2</span><span class="p">[:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">byte2</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span> <span class="o">+</span> <span class="n">byte3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">v1</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v1</span> <span class="o">/</span> <span class="mi">4095</span><span class="p">)</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">v2</span> <span class="o">/</span> <span class="mi">4095</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span>
+
+    <span class="k">def</span> <span class="nf">_hexword2lonlat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hex_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert Seabird lon/lat data in hex format.</span>
+<span class="sd">        Each byte is given as two hex digits.</span>
+<span class="sd">        Each SB freq word is 3 bytes.</span>
+<span class="sd">        Calculates freq from 3 byte word.</span>
+<span class="sd">        Last two characters contain pos/neg information.</span>
+<span class="sd">        More information on p. 43 in manual-11pV2_018.pdf</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hex_str : str</span>
+<span class="sd">            6 character long hex string</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lon, lat : float</span>
+<span class="sd">            longitude and latitude</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">12</span><span class="p">:</span><span class="mi">14</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+        <span class="n">newpos</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+        <span class="n">lonneg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">latneg</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">lat</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">latneg</span>
+            <span class="o">*</span> <span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="mi">65536</span>
+                <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="mi">256</span>
+                <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">6</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="mf">5e4</span>
+        <span class="p">)</span>
+        <span class="n">lon</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">lonneg</span>
+            <span class="o">*</span> <span class="p">(</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="mi">8</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="mi">65536</span>
+                <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="mi">256</span>
+                <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">10</span><span class="p">:</span><span class="mi">12</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">/</span> <span class="mf">5e4</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">newpos</span><span class="p">,</span> <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span>
+
+    <span class="k">def</span> <span class="nf">_hexword2spar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hex_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert Seabird spar (Photosynthetically Active Radiation) hex data</span>
+<span class="sd">        each byte is given as two hex digits</span>
+<span class="sd">        each SB voltage is 1.5 words (8 MSB + 4 LSB)</span>
+<span class="sd">        calculates SPAR voltages from 1.5 byte half word</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hex_str : str</span>
+<span class="sd">            3 character long hex string</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        spar : float</span>
+<span class="sd">            Photosynthetically Active Radiation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">byte1</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;04b&quot;</span><span class="p">)</span>
+        <span class="n">byte2</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+        <span class="n">spar</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">byte1</span> <span class="o">+</span> <span class="n">byte2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">819</span>
+        <span class="k">return</span> <span class="n">spar</span>
+
+    <span class="k">def</span> <span class="nf">_hexword2pstat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hex_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert Seabird pressure sensor temperature and ctd status from hex data.</span>
+<span class="sd">        Each byte is given as two hex digits.</span>
+<span class="sd">        12 bit number from 0-4095 represents P sensor temperature .</span>
+<span class="sd">        4 bit CTD status:</span>
+<span class="sd">          bit 0 = pump status = 1/0 = on/off</span>
+<span class="sd">          bit 1 = bottom contact = 1/0 = no contact/contact</span>
+<span class="sd">          bit 2 = water sampler confirm = 1/0 = deck unit detetcts/does not signal</span>
+<span class="sd">          bit 3 = CTD modem carrier detects/does not detect deck unit = 1/0</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        hex_str : str</span>
+<span class="sd">            4 character long hex string</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pst : int</span>
+<span class="sd">            Pressure sensor temperature</span>
+<span class="sd">        ctdstatus : binary</span>
+<span class="sd">            CTD status (see above)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">byte1</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+        <span class="n">byte2</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hex_str</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">16</span><span class="p">),</span> <span class="s2">&quot;08b&quot;</span><span class="p">)</span>
+        <span class="n">pst</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">byte1</span> <span class="o">+</span> <span class="n">byte2</span><span class="p">[:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ctdstatus</span> <span class="o">=</span> <span class="n">byte2</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">pst</span><span class="p">,</span> <span class="n">ctdstatus</span>
+
+    <span class="k">def</span> <span class="nf">_find_xmlconfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate path to xml config file for current hex file.</span>
+<span class="sd">        Config file needs to be in the same directory as the hex file.&quot;&quot;&quot;</span>
+        <span class="n">pp</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">stem</span>
+        <span class="n">xmlfile</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;.XMLCON&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">pp</span><span class="o">.</span><span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmlfile</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">xmlfile</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CTD.read_xml_config"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.read_xml_config">[docs]</a>    <span class="k">def</span> <span class="nf">read_xml_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Read xml config file.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_find_xmlconfig</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmlfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">fd</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">xmltodict</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">fd</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;SBE_InstrumentConfiguration&quot;</span><span class="p">]</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;Instrument&quot;</span><span class="p">]</span>
+        <span class="n">sa</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span><span class="s2">&quot;SensorArray&quot;</span><span class="p">][</span><span class="s2">&quot;Sensor&quot;</span><span class="p">]</span>
+        <span class="c1"># parse only valide sensors</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">ti</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ci</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">sa</span><span class="p">:</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">si</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;@&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">k</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">&quot;NotInUse&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;TemperatureSensor&quot;</span><span class="p">:</span>
+                        <span class="n">ti</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">kstr</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">ti</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;ConductivitySensor&quot;</span><span class="p">:</span>
+                        <span class="n">ci</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">kstr</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">ci</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">kstr</span> <span class="o">=</span> <span class="n">k</span>
+                    <span class="n">cfg</span><span class="p">[</span><span class="n">kstr</span><span class="p">]</span> <span class="o">=</span> <span class="n">si</span>
+                    <span class="n">cfg</span><span class="p">[</span><span class="n">kstr</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">munchify</span><span class="p">(</span><span class="n">cfg</span><span class="p">[</span><span class="n">kstr</span><span class="p">][</span><span class="n">k</span><span class="p">])</span>
+                    <span class="k">del</span> <span class="n">cfg</span><span class="p">[</span><span class="n">kstr</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xml_coeffs_to_float</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_xml_coeffs_to_float</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Convert calibration coefficients to floats.</span>
+        <span class="n">keep_strings</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;@SensorID&quot;</span><span class="p">,</span> <span class="s2">&quot;SerialNumber&quot;</span><span class="p">,</span> <span class="s2">&quot;CalibrationDate&quot;</span><span class="p">,</span> <span class="s2">&quot;UseG_J&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">ki</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">ki</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">keep_strings</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">li</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">]):</span>
+                        <span class="k">for</span> <span class="n">kli</span> <span class="ow">in</span> <span class="n">li</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">kli</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;cal&quot;</span><span class="p">][</span><span class="n">ki</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">kli</span><span class="p">]</span>
+                            <span class="p">)</span>
+            <span class="c1"># We can&#39;t have None values in the xarray.Dataset later on</span>
+            <span class="c1"># or otherwise it won&#39;t properly write to netcdf. Therefore,</span>
+            <span class="c1"># convert any None items to &#39;N/A&#39;</span>
+            <span class="k">for</span> <span class="n">ki</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="p">[</span><span class="n">ki</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;N/A&#39;</span>
+
+<div class="viewcode-block" id="CTD.physicalunits"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.physicalunits">[docs]</a>    <span class="k">def</span> <span class="nf">physicalunits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># pressure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_p_atm</span> <span class="o">=</span> <span class="mf">10.1353</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">Munch</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">lon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">lon</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">lat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">lat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_freq2pressure</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">pst</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">PressureSensor</span><span class="o">.</span><span class="n">cal</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">t1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_freq2temp</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">t1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">TemperatureSensor1</span><span class="o">.</span><span class="n">cal</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">t2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_freq2temp</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">t2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">TemperatureSensor2</span><span class="o">.</span><span class="n">cal</span>
+        <span class="p">)</span>
+        <span class="n">ccal1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">ConductivitySensor1</span><span class="o">.</span><span class="n">cal</span><span class="o">.</span><span class="n">Coefficients</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_freq2cond</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">c1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">t1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">ccal1</span>
+        <span class="p">)</span>
+        <span class="n">ccal2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">ConductivitySensor2</span><span class="o">.</span><span class="n">cal</span><span class="o">.</span><span class="n">Coefficients</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">c2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_freq2cond</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">c2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">t2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">ccal2</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="p">,</span> <span class="s2">&quot;alt&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">alt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volt2alt</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">alt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="o">.</span><span class="n">AltimeterSensor</span><span class="o">.</span><span class="n">cal</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="p">,</span> <span class="s2">&quot;fl&quot;</span><span class="p">):</span>
+            <span class="c1"># couldn&#39;t find any good calibration coefficients in the con file I looked at.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">fl</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="p">,</span> <span class="s2">&quot;trans&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">trans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volt2trans</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_volt</span><span class="p">[</span><span class="s2">&quot;trans&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">cal</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="p">,</span> <span class="s2">&quot;par&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">par</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volt2par</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">par</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_volt</span><span class="p">[</span><span class="s2">&quot;par&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">cal</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">modcount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">modcount</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_modcount_errors</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">modcount</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtnum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sbetime_to_mattime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataraw</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mattime_to_datetime64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtnum</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_freq2pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">tc</span><span class="p">,</span> <span class="n">pcal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculates pressure given frequency pressure temperature compensation</span>
+<span class="sd">        and pressure calibration structure pcal&quot;&quot;&quot;</span>
+        <span class="n">psi2dbar</span> <span class="o">=</span> <span class="mf">0.689476</span>
+
+        <span class="n">Td</span> <span class="o">=</span> <span class="n">pcal</span><span class="o">.</span><span class="n">AD590M</span> <span class="o">*</span> <span class="n">tc</span> <span class="o">+</span> <span class="n">pcal</span><span class="o">.</span><span class="n">AD590B</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">pcal</span><span class="o">.</span><span class="n">C1</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="p">(</span><span class="n">pcal</span><span class="o">.</span><span class="n">C2</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="n">pcal</span><span class="o">.</span><span class="n">C3</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">pcal</span><span class="o">.</span><span class="n">D1</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="n">pcal</span><span class="o">.</span><span class="n">D2</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">pcal</span><span class="o">.</span><span class="n">T1</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="p">(</span><span class="n">pcal</span><span class="o">.</span><span class="n">T2</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="p">(</span><span class="n">pcal</span><span class="o">.</span><span class="n">T3</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="p">(</span><span class="n">pcal</span><span class="o">.</span><span class="n">T4</span> <span class="o">+</span> <span class="n">Td</span> <span class="o">*</span> <span class="n">pcal</span><span class="o">.</span><span class="n">T5</span><span class="p">)))</span>
+        <span class="n">t0f</span> <span class="o">=</span> <span class="mf">1e-6</span> <span class="o">*</span> <span class="n">t0</span> <span class="o">*</span> <span class="n">freq</span>
+        <span class="n">fact</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">t0f</span> <span class="o">*</span> <span class="n">t0f</span><span class="p">)</span>
+        <span class="n">pres</span> <span class="o">=</span> <span class="n">psi2dbar</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">*</span> <span class="n">fact</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span> <span class="o">*</span> <span class="n">fact</span><span class="p">))</span>
+        <span class="n">pres</span> <span class="o">=</span> <span class="n">pcal</span><span class="o">.</span><span class="n">Slope</span> <span class="o">*</span> <span class="n">pres</span> <span class="o">+</span> <span class="n">pcal</span><span class="o">.</span><span class="n">Offset</span>
+        <span class="k">return</span> <span class="n">pres</span>
+
+    <span class="k">def</span> <span class="nf">_freq2temp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">tcal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate  temperature given frequency and </span>
+<span class="sd">        temperature calibration structure tcal</span>
+<span class="sd">        D. Rudnick 01/06/05&quot;&quot;&quot;</span>
+
+        <span class="n">logf0f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">tcal</span><span class="o">.</span><span class="n">F0</span> <span class="o">/</span> <span class="n">freq</span><span class="p">)</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">tcal</span><span class="o">.</span><span class="n">G</span> <span class="o">+</span> <span class="n">logf0f</span> <span class="o">*</span> <span class="p">(</span><span class="n">tcal</span><span class="o">.</span><span class="n">H</span> <span class="o">+</span> <span class="n">logf0f</span> <span class="o">*</span> <span class="p">(</span><span class="n">tcal</span><span class="o">.</span><span class="n">I</span> <span class="o">+</span> <span class="n">logf0f</span> <span class="o">*</span> <span class="n">tcal</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span>
+        <span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span>
+        <span class="k">return</span> <span class="n">temp</span>
+
+    <span class="k">def</span> <span class="nf">_freq2cond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">pres</span><span class="p">,</span> <span class="n">ccal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculates conductivity given frequency, temperature,</span>
+<span class="sd">        pressure and conductivity calibration structure ccal.</span>
+<span class="sd">        D. Rudnick 01/06/05&quot;&quot;&quot;</span>
+
+        <span class="n">ff</span> <span class="o">=</span> <span class="n">freq</span> <span class="o">/</span> <span class="mi">1000</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="p">(</span><span class="n">ccal</span><span class="o">.</span><span class="n">G</span> <span class="o">+</span> <span class="n">ff</span> <span class="o">*</span> <span class="n">ff</span> <span class="o">*</span> <span class="p">(</span><span class="n">ccal</span><span class="o">.</span><span class="n">H</span> <span class="o">+</span> <span class="n">ff</span> <span class="o">*</span> <span class="p">(</span><span class="n">ccal</span><span class="o">.</span><span class="n">I</span> <span class="o">+</span> <span class="n">ff</span> <span class="o">*</span> <span class="n">ccal</span><span class="o">.</span><span class="n">J</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span>
+            <span class="mi">10</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">ccal</span><span class="o">.</span><span class="n">CTcor</span> <span class="o">*</span> <span class="n">temp</span> <span class="o">+</span> <span class="n">ccal</span><span class="o">.</span><span class="n">CPcor</span> <span class="o">*</span> <span class="n">pres</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">cond</span>
+
+    <span class="k">def</span> <span class="nf">_volt2alt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">,</span> <span class="n">acal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate altimeter data from voltage.&quot;&quot;&quot;</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">volt</span> <span class="o">*</span> <span class="n">acal</span><span class="o">.</span><span class="n">ScaleFactor</span> <span class="o">+</span> <span class="n">acal</span><span class="o">.</span><span class="n">Offset</span>
+        <span class="k">return</span> <span class="n">alt</span>
+
+    <span class="k">def</span> <span class="nf">_volt2trans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">,</span> <span class="n">transcal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate transmissometer data from voltage.&quot;&quot;&quot;</span>
+        <span class="n">trans</span> <span class="o">=</span> <span class="n">volt</span> <span class="o">*</span> <span class="n">transcal</span><span class="o">.</span><span class="n">M</span> <span class="o">+</span> <span class="n">transcal</span><span class="o">.</span><span class="n">B</span>
+        <span class="k">return</span> <span class="n">trans</span>
+
+    <span class="k">def</span> <span class="nf">_volt2par</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">volt</span><span class="p">,</span> <span class="n">cal</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate PAR data from voltage.&quot;&quot;&quot;</span>
+        <span class="n">par</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">cal</span><span class="o">.</span><span class="n">Multiplier</span>
+            <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="mi">9</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">((</span><span class="n">volt</span> <span class="o">-</span> <span class="n">cal</span><span class="o">.</span><span class="n">B</span><span class="p">)</span> <span class="o">/</span> <span class="n">cal</span><span class="o">.</span><span class="n">M</span><span class="p">))</span>
+            <span class="o">/</span> <span class="n">cal</span><span class="o">.</span><span class="n">CalibrationConstant</span>
+        <span class="p">)</span> <span class="o">+</span> <span class="n">cal</span><span class="o">.</span><span class="n">Offset</span>
+        <span class="k">return</span> <span class="n">par</span>
+
+    <span class="k">def</span> <span class="nf">_check_modcount_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modcount</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check for modcount errors.&quot;&quot;&quot;</span>
+        <span class="n">dmc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">modcount</span><span class="p">)</span>
+        <span class="n">mmc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">dmc</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+        <span class="n">fmc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mmc</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">fmc</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: </span><span class="si">{}</span><span class="s2"> bad modcounts&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dmc</span><span class="p">[</span><span class="n">mmc</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">])))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: </span><span class="si">{}</span><span class="s2"> missing scans&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mmc</span><span class="p">[</span><span class="n">fmc</span><span class="p">])))</span>
+
+<div class="viewcode-block" id="CTD.sbetime_to_mattime"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.sbetime_to_mattime">[docs]</a>    <span class="k">def</span> <span class="nf">sbetime_to_mattime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert SBE time format to matlab time format.&quot;&quot;&quot;</span>
+        <span class="n">dtnum</span> <span class="o">=</span> <span class="n">dt</span> <span class="o">/</span> <span class="mi">24</span> <span class="o">/</span> <span class="mi">3600</span> <span class="o">+</span> <span class="mi">719529</span>
+        <span class="k">return</span> <span class="n">dtnum</span></div>
+
+<div class="viewcode-block" id="CTD.mattime_to_datetime64"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.mattime_to_datetime64">[docs]</a>    <span class="k">def</span> <span class="nf">mattime_to_datetime64</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtnum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert Matlab time format to numpy datetime64 time format.&quot;&quot;&quot;</span>
+        <span class="n">dt64</span> <span class="o">=</span> <span class="n">mtlb2datetime</span><span class="p">(</span><span class="n">dtnum</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dt64</span></div>
+
+<div class="viewcode-block" id="CTD.to_mat"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.to_mat">[docs]</a>    <span class="k">def</span> <span class="nf">to_mat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matname</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save data in Matlab format.&quot;&quot;&quot;</span>
+        <span class="n">ctdout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">ctdout</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+        <span class="c1"># ctdout.pop(&#39;matlabtime&#39;)</span>
+        <span class="c1"># ctdout[&#39;den&#39;] = ctdout[&#39;pden&#39;]</span>
+        <span class="c1"># ctdout.pop(&#39;pden&#39;)</span>
+        <span class="c1"># ctdout[&#39;time&#39;] = ctd[&#39;matlabtime&#39;]</span>
+        <span class="n">sio</span><span class="o">.</span><span class="n">savemat</span><span class="p">(</span><span class="n">matname</span><span class="p">,</span> <span class="n">ctdout</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;5&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CTD.to_xarray"><a class="viewcode-back" href="../../source/ctdproc.html#ctdproc.io.CTD.to_xarray">[docs]</a>    <span class="k">def</span> <span class="nf">to_xarray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert data into xarray.Dataset.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ds : xarray.Dataset</span>
+<span class="sd">            CTD time series in Dataset format.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dsout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">dsout</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+        <span class="n">dsout</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;dtnum&quot;</span><span class="p">)</span>
+        <span class="n">datavars</span> <span class="o">=</span> <span class="n">dsout</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">ds_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span><span class="p">:</span> <span class="p">([</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">datavars</span><span class="p">}</span>
+        <span class="n">ds</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+            <span class="n">data_vars</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">ds_data</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="p">([</span><span class="s2">&quot;time&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])}</span>
+        <span class="p">)</span>
+        <span class="c1"># set attributes</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_freq</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;SN&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="p">[</span><span class="s2">&quot;SerialNumber&quot;</span><span class="p">]</span>
+            <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;CalDate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="p">[</span><span class="s2">&quot;CalibrationDate&quot;</span><span class="p">]</span>
+            <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;long_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapunits_freq</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapnames_volt</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+                <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;SN&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="p">[</span><span class="s2">&quot;SerialNumber&quot;</span><span class="p">]</span>
+                <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;CalDate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cfgp</span><span class="p">[</span><span class="n">v</span><span class="p">]</span><span class="o">.</span><span class="n">cal</span><span class="p">[</span><span class="s2">&quot;CalibrationDate&quot;</span><span class="p">]</span>
+                <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;long_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="n">ds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapunits_volt</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ds</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Gunnar Voet
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
