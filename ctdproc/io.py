@@ -2,7 +2,6 @@
 # coding: utf-8
 import numpy as np
 import xarray as xr
-import matplotlib.pyplot as plt
 from pathlib import Path
 import xmltodict
 import pandas as pd
