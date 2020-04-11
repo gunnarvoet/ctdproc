@@ -6,6 +6,7 @@ Documentation
 -------------
 Read up on how to write great documentation:
 
+* Interesting thoughts on the four quadrants of documentation: tutorials / how-to guides / reference / explanation - https://documentation.divio.com/
 * https://realpython.com/documenting-python-code/
 * https://docs.python-guide.org/writing/documentation/
 * numpy docstring style: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html#example-numpy
