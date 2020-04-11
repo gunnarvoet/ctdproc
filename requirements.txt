@@ -1,0 +1,8 @@
+numpy
+xarray
+gsw
+scipy
+xmltodict
+pandas
+munch
+matplotlib
