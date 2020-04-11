@@ -3,7 +3,16 @@
 import numpy as np
 import xarray as xr
 from scipy import signal, optimize, fft, stats
-import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+# We are running into trouble if the default backend is not installed
+# in the current python environment. Try to import pyplot the default
+# way first. If this fails, set backend to agg which should always work.
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    mpl.use("agg")
+    import matplotlib.pyplot as plt
 import gsw
 from . import helpers, calcs
 
@@ -165,9 +174,9 @@ def ctd_cleanup2(data):
     diffs = 1e-3
     ibefore = 2
     iafter = 2
-    for vi in ['s1', 's2', 'SA1', 'SA2']:
+    for vi in ["s1", "s2", "SA1", "SA2"]:
         data[vi].data = helpers.glitchcorrect(data[vi], diffs, prods, ibefore, iafter)
-    
+
     # calculate potential/conservative temperature, potential density anomaly
     data = calcs.calc_temp(data)
     data = calcs.calc_sigma(data)
@@ -706,37 +715,39 @@ def ctd_bincast(data, dz, zmin, zmax):
     data : xr.Dataset
         Depth-binned CTD profile
     """
-    dz2 = dz/2
-    zbin = np.arange(zmin-dz2, zmax+dz+dz2, dz)
-    zbinlabel = np.arange(zmin, zmax+dz, dz)
+    dz2 = dz / 2
+    zbin = np.arange(zmin - dz2, zmax + dz + dz2, dz)
+    zbinlabel = np.arange(zmin, zmax + dz, dz)
 
     # prepare dataset
-    tmp = data.swap_dims({'time': 'depth'})
+    tmp = data.swap_dims({"time": "depth"})
     tmp = tmp.reset_coords()
 
     # need to bin time separately, not sure why
-    btime = tmp.time.groupby_bins('depth', bins=zbin, labels=zbinlabel,
-                       right=True, include_lowest=True).mean()
+    btime = tmp.time.groupby_bins(
+        "depth", bins=zbin, labels=zbinlabel, right=True, include_lowest=True
+    ).mean()
     # bin all variables
-    out = tmp.groupby_bins('depth', bins=zbin, labels=zbinlabel,
-                       right=True, include_lowest=True).mean()
+    out = tmp.groupby_bins(
+        "depth", bins=zbin, labels=zbinlabel, right=True, include_lowest=True
+    ).mean()
 
     # organize
-    out.coords['time'] = btime
-    out = out.set_coords(['lon', 'lat'])
-    out = out.rename_dims({'depth_bins': 'z'})
-    out = out.rename({'depth_bins': 'depth'})
+    out.coords["time"] = btime
+    out = out.set_coords(["lon", "lat"])
+    out = out.rename_dims({"depth_bins": "z"})
+    out = out.rename({"depth_bins": "depth"})
 
     # copy attributes
     # get data variable names
     varnames = [k for k, v in data.data_vars.items()]
     for vari in varnames:
         out[vari].attrs = data[vari].attrs
-    out['depth'].attrs = {'long_name': 'depth', 'units': 'm'}
+    out["depth"].attrs = {"long_name": "depth", "units": "m"}
     out.attrs = data.attrs
 
     # recalculate pressure from depth bins
-    out['p'] = (['z'], gsw.p_from_z(-1 * out.depth, out.lat))
-    out.p.attrs = {'long_name': 'pressure', 'units': 'dbar'}
+    out["p"] = (["z"], gsw.p_from_z(-1 * out.depth, out.lat))
+    out.p.attrs = {"long_name": "pressure", "units": "dbar"}
 
     return out
