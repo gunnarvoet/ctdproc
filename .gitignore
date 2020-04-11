@@ -2,4 +2,4 @@
 misc/
 ctdproc.egg-info/
 docs/_build/
-notebooks/
+notebooks/.ipynb_checkpoints
