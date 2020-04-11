@@ -3,8 +3,6 @@
 import numpy as np
 import xarray as xr
 from scipy import signal, optimize, fft, stats
-import matplotlib as mpl
-mpl.use('tkagg')
 import matplotlib.pyplot as plt
 import gsw
 from . import helpers, calcs

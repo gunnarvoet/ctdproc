@@ -22,16 +22,16 @@ setup(
     
     # Requirements
     python_requires='>=3.6',
-    install_requires=["numpy>=1.0.0",
-                      "xarray>=0.10.0",
-                      "gsw>=2.0.0",
-                      "scipy>=1.0.0",
-                      "xmltodict>=0.12.0",
-                      "pandas>=1.0.0",
-                      "munch>=1.0.0",
-                      "matplotlib>=3.1.0"],
+    install_requires=["numpy",
+                      "xarray",
+                      "gsw",
+                      "scipy",
+                      "xmltodict",
+                      "pandas",
+                      "munch",
+                      "matplotlib"],
     extras_require={
-        'test': [  # install these with: pip install booster[test]
+        'test': [  # install these with: pip install ctdproc[test]
             "pytest>=3.8",
             "coverage>=4.5",
             "pytest-cov>=2.6",
