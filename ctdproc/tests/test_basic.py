@@ -1,9 +1,9 @@
 import pathlib
 import ctdproc as ctd
+import xarray as xr
 
 def test_success():
     assert True
-    assert 1
 
 # we defined rootdir as a fixture in conftest.py
 # and can use it here as input now
@@ -18,3 +18,4 @@ def test_read_hex(rootdir, tmpdir):
 
     p = pathlib.Path(tmpdir) / 'testfile.nc'
     cx.to_netcdf(p)
+    cx2 = xr.open_dataset(p)
