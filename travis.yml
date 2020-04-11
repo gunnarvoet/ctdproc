@@ -12,7 +12,7 @@ script:
   - pytest
 
 # safelist
-branches:
-  only:
-  - master
-  - stable
+#branches:
+#  only:
+#  - master
+#  - stable
