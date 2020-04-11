@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ctdproc.proc &mdash; ctdproc 0.1.0 documentation</title>
+  <title>ctdproc.proc &mdash; ctdproc 0.1.2 documentation</title>
   
 
   
@@ -58,7 +58,7 @@
             
             
               <div class="version">
-                0.1.0
+                0.1.2
               </div>
             
           
@@ -159,7 +159,16 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">signal</span><span class="p">,</span> <span class="n">optimize</span><span class="p">,</span> <span class="n">fft</span><span class="p">,</span> <span class="n">stats</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+
+<span class="c1"># We are running into trouble if the default backend is not installed</span>
+<span class="c1"># in the current python environment. Try to import pyplot the default</span>
+<span class="c1"># way first. If this fails, set backend to agg which should always work.</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">mpl</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;agg&quot;</span><span class="p">)</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">gsw</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">helpers</span><span class="p">,</span> <span class="n">calcs</span>
 
@@ -321,9 +330,9 @@
     <span class="n">diffs</span> <span class="o">=</span> <span class="mf">1e-3</span>
     <span class="n">ibefore</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">iafter</span> <span class="o">=</span> <span class="mi">2</span>
-    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;s1&#39;</span><span class="p">,</span> <span class="s1">&#39;s2&#39;</span><span class="p">,</span> <span class="s1">&#39;SA1&#39;</span><span class="p">,</span> <span class="s1">&#39;SA2&#39;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">vi</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;s1&quot;</span><span class="p">,</span> <span class="s2">&quot;s2&quot;</span><span class="p">,</span> <span class="s2">&quot;SA1&quot;</span><span class="p">,</span> <span class="s2">&quot;SA2&quot;</span><span class="p">]:</span>
         <span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">helpers</span><span class="o">.</span><span class="n">glitchcorrect</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">vi</span><span class="p">],</span> <span class="n">diffs</span><span class="p">,</span> <span class="n">prods</span><span class="p">,</span> <span class="n">ibefore</span><span class="p">,</span> <span class="n">iafter</span><span class="p">)</span>
-    
+
     <span class="c1"># calculate potential/conservative temperature, potential density anomaly</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">calc_temp</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">calcs</span><span class="o">.</span><span class="n">calc_sigma</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -862,38 +871,40 @@
 <span class="sd">    data : xr.Dataset</span>
 <span class="sd">        Depth-binned CTD profile</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">dz2</span> <span class="o">=</span> <span class="n">dz</span><span class="o">/</span><span class="mi">2</span>
-    <span class="n">zbin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">zmin</span><span class="o">-</span><span class="n">dz2</span><span class="p">,</span> <span class="n">zmax</span><span class="o">+</span><span class="n">dz</span><span class="o">+</span><span class="n">dz2</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
-    <span class="n">zbinlabel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span><span class="o">+</span><span class="n">dz</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+    <span class="n">dz2</span> <span class="o">=</span> <span class="n">dz</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">zbin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">zmin</span> <span class="o">-</span> <span class="n">dz2</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">+</span> <span class="n">dz</span> <span class="o">+</span> <span class="n">dz2</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
+    <span class="n">zbinlabel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">+</span> <span class="n">dz</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span>
 
     <span class="c1"># prepare dataset</span>
-    <span class="n">tmp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="s1">&#39;depth&#39;</span><span class="p">})</span>
+    <span class="n">tmp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="s2">&quot;depth&quot;</span><span class="p">})</span>
     <span class="n">tmp</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">reset_coords</span><span class="p">()</span>
 
     <span class="c1"># need to bin time separately, not sure why</span>
-    <span class="n">btime</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">zbin</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">zbinlabel</span><span class="p">,</span>
-                       <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">btime</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span>
+        <span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">zbin</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">zbinlabel</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
     <span class="c1"># bin all variables</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span><span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">zbin</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">zbinlabel</span><span class="p">,</span>
-                       <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">groupby_bins</span><span class="p">(</span>
+        <span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">zbin</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">zbinlabel</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 
     <span class="c1"># organize</span>
-    <span class="n">out</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">btime</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">set_coords</span><span class="p">([</span><span class="s1">&#39;lon&#39;</span><span class="p">,</span> <span class="s1">&#39;lat&#39;</span><span class="p">])</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">rename_dims</span><span class="p">({</span><span class="s1">&#39;depth_bins&#39;</span><span class="p">:</span> <span class="s1">&#39;z&#39;</span><span class="p">})</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;depth_bins&#39;</span><span class="p">:</span> <span class="s1">&#39;depth&#39;</span><span class="p">})</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">btime</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">set_coords</span><span class="p">([</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">rename_dims</span><span class="p">({</span><span class="s2">&quot;depth_bins&quot;</span><span class="p">:</span> <span class="s2">&quot;z&quot;</span><span class="p">})</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">&quot;depth_bins&quot;</span><span class="p">:</span> <span class="s2">&quot;depth&quot;</span><span class="p">})</span>
 
     <span class="c1"># copy attributes</span>
     <span class="c1"># get data variable names</span>
     <span class="n">varnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">data_vars</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
     <span class="k">for</span> <span class="n">vari</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">:</span>
         <span class="n">out</span><span class="p">[</span><span class="n">vari</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">vari</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span>
-    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;depth&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;depth&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">}</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;depth&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">}</span>
     <span class="n">out</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span>
 
     <span class="c1"># recalculate pressure from depth bins</span>
-    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s1">&#39;z&#39;</span><span class="p">],</span> <span class="n">gsw</span><span class="o">.</span><span class="n">p_from_z</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">lat</span><span class="p">))</span>
-    <span class="n">out</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;dbar&#39;</span><span class="p">}</span>
+    <span class="n">out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;z&quot;</span><span class="p">],</span> <span class="n">gsw</span><span class="o">.</span><span class="n">p_from_z</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">out</span><span class="o">.</span><span class="n">depth</span><span class="p">,</span> <span class="n">out</span><span class="o">.</span><span class="n">lat</span><span class="p">))</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;pressure&quot;</span><span class="p">,</span> <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;dbar&quot;</span><span class="p">}</span>
 
     <span class="k">return</span> <span class="n">out</span></div>
 </pre></div>
