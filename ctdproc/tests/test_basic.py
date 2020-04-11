@@ -3,6 +3,7 @@ import ctdproc as ctd
 
 def test_success():
     assert True
+    assert 1
 
 # we defined rootdir as a fixture in conftest.py
 # and can use it here as input now
