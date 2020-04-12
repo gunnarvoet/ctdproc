@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 import numpy as np
-import xarray as xr
 import gsw
 from scipy import signal
 from . import helpers
@@ -38,7 +37,7 @@ def swcalcs(data):
     """
     # Most derived variables are now calculated in proc.ctd_cleanup2()
     # Not sure why they are calculated two times in the Matlab package.
-    
+
     # data = calc_sal(data)
     # data = calc_temp(data)
     # data = calc_sigma(data)
@@ -148,7 +147,7 @@ def wsink(p, Ts, Fs):
     Computes the sinking (or rising) velocity from the pressure signal p
     by first differencing. The pressure signal is smoothed with a low-pass
     filter for differentiation. If the input signal is shorter than the
-    smoothing time scale, w is taken as the slope of the linear regression of p. 
+    smoothing time scale, w is taken as the slope of the linear regression of p.
 
     Adapted from wsink.m - Fabian Wolk, Rockland Oceanographic Services Inc.
 

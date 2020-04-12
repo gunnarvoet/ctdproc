@@ -24,7 +24,7 @@ def unique_arrays(*arrays):
 
 def findsegments(ibad):
     """
-    Find contiguous segments in an array of indices. 
+    Find contiguous segments in an array of indices.
 
     Parameters
     ----------
@@ -42,7 +42,6 @@ def findsegments(ibad):
     """
     dibad = np.diff(ibad)
     jj = np.argwhere(dibad > 1)
-    nseg = jj.size + 1
 
     istart = jj + 1
     istart = np.insert(istart, 0, 0)
@@ -111,7 +110,6 @@ def interpbadsegments(x, ibad):
         Interpolated array
     """
     istart, istop, seglen = findsegments(ibad)
-    nsegs = istart.size
     y = x.copy()
     for iia, iis, iilen in zip(istart, istop, seglen):
         i1 = iia - 1
@@ -129,7 +127,7 @@ def interpbadsegments(x, ibad):
 def glitchcorrect(x, diffx, prodx, ibefore=0, iafter=0):
     """
     Remove glitches/spikes in array.
-    
+
     Adapted from tms_tc_glitchcorrect.m
 
     Parameters
@@ -157,24 +155,27 @@ def glitchcorrect(x, diffx, prodx, ibefore=0, iafter=0):
     with warnings.catch_warnings():
         # Prevent warning due to nans present in nanmin being printed
         warnings.simplefilter("ignore")
-        dmin2 = np.nanmin(np.vstack([np.absolute(dx[0:-1]), np.absolute(dx[1:])]), axis=0)
-        dmin3 = np.nanmin(np.vstack([np.absolute(dx[0:-2]), np.absolute(dx[2:])]), axis=0)
+        dmin2 = np.nanmin(
+            np.vstack([np.absolute(dx[0:-1]), np.absolute(dx[1:])]), axis=0
+        )
+        dmin3 = np.nanmin(
+            np.vstack([np.absolute(dx[0:-2]), np.absolute(dx[2:])]), axis=0
+        )
 
     dmul2 = -dx[0:-1] * dx[1:]
     dmul3 = -dx[0:-2] * dx[2:]
 
     ii2 = np.argwhere(
-        np.greater(dmul2, prodx, where=np.isfinite(dmul2)) &
-        np.greater(dmin2, diffx, where=np.isfinite(dmin2))
-        )
+        np.greater(dmul2, prodx, where=np.isfinite(dmul2))
+        & np.greater(dmin2, diffx, where=np.isfinite(dmin2))
+    )
     ii3 = np.argwhere(
-        np.greater(dmul3, prodx, where=np.isfinite(dmul3)) &
-        np.greater(dmin3, diffx, where=np.isfinite(dmin3))
-        )
+        np.greater(dmul3, prodx, where=np.isfinite(dmul3))
+        & np.greater(dmin3, diffx, where=np.isfinite(dmin3))
+    )
 
     ii2 = unique_arrays(ii2, ii2 + 1)
     ii3 = unique_arrays(ii3, ii3 + 1, ii3 + 2)
-    ii = unique_arrays(ii2, ii3)
 
     jj2 = inearby(ii2, ibefore, iafter, nx)
     jj3 = inearby(ii3, ibefore, iafter, nx)
@@ -205,7 +206,7 @@ def preen(x, xmin, xmax):
         Cleaned array
     """
     indexall = np.array(range(0, x.size))
-    ii = np.squeeze(np.where(((x<xmin) | (x>xmax) | (np.imag(x)!=0))))
+    ii = np.squeeze(np.where(((x < xmin) | (x > xmax) | (np.imag(x) != 0))))
     indexclean = np.delete(indexall, ii)
     x = np.delete(x, ii)
     xp = interp1d(indexclean, x)(indexall)
@@ -213,21 +214,21 @@ def preen(x, xmin, xmax):
 
 
 def atanfit(x, f, Phi, W):
-    f = np.arctan(2*np.pi*f*x[0]) + 2*np.pi*f*x[1] + Phi
-    f = np.matmul(np.matmul(f.transpose(), W**4), f)
+    f = np.arctan(2 * np.pi * f * x[0]) + 2 * np.pi * f * x[1] + Phi
+    f = np.matmul(np.matmul(f.transpose(), W ** 4), f)
     return f
 
 
 def pad_lr(p, nPad):
     """Pad array left and right"""
     p0 = p[0]
-    p=p-p0
-    p=p0+np.insert(p, 0, -p[nPad-1::-1])
-    
+    p = p - p0
+    p = p0 + np.insert(p, 0, -p[nPad - 1 :: -1])
+
     p0 = p[-1]
-    p = p-p0
-    p = p0 + np.insert(p, -1,  -p[:-nPad-1:-1])
-    
+    p = p - p0
+    p = p0 + np.insert(p, -1, -p[: -nPad - 1 : -1])
+
     return p
 
 
