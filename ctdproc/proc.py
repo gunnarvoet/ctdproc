@@ -435,7 +435,7 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
 
     # Corrected Fourier transforms of temperature.
     Ad["t1"] = Ad["t1"] * ((H1 * LP) * np.ones((2 * m - 1, 1)))
-    Ad["t2"] = Ad["t2"] * ((H1 * LP) * np.ones((2 * m - 1, 1)))
+    Ad["t2"] = Ad["t2"] * ((H2 * LP) * np.ones((2 * m - 1, 1)))
 
     # LP filter remaining variables
     vars2 = [
@@ -483,7 +483,7 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
     t2 = Adi["t2"][int(N / 4) : -int(N / 4)]
     c1 = Adi["c1"][int(N / 4) : -int(N / 4)]
     c2 = Adi["c2"][int(N / 4) : -int(N / 4)]
-    p = Adi["p"][int(N / 4) : -int(N / 4)]
+    # p = Adi["p"][int(N / 4) : -int(N / 4)]
 
     m = (i2 - N) / N  # number of segments = dof/2
     m = np.floor(m).astype("int64")
@@ -640,7 +640,6 @@ def ctd_rmloops(data, wthresh=0.1):
     """
     tsmooth = 0.25  # seconds
     fs = 24  # Hz
-    pn = data.p.size
     w = calcs.wsink(data.p.data, tsmooth, fs)  # down/up +/-ve
     iloop = np.array([])
 
@@ -653,7 +652,6 @@ def ctd_rmloops(data, wthresh=0.1):
         flp = np.squeeze(np.argwhere(w < wthresh))
         if flp.size >= 1:
             ia, ib, ilen = helpers.findsegments(flp)
-            nlp = ia.size
             for start, stop in zip(ia, ib):
                 pmi = np.argmax(data.p[:stop]).data
                 pm = data.p[pmi].data
@@ -662,14 +660,12 @@ def ctd_rmloops(data, wthresh=0.1):
                 iloop = np.append(iloop, pmi + tmp - 1)
             iloop = iloop.astype("int64")
         else:
-            nlp = np.array([])
             iloop = np.array([])
     else:
         # upcast
         flp = np.squeeze(np.argwhere(w > -wthresh))
         if flp.size >= 1:
             ia, ib, ilen = helpers.findsegments(flp)
-            nlp = ia.size
             for start, stop in zip(ia, ib):
                 pmi = np.argmax(data.p[:stop]).data
                 pm = data.p[pmi].data
@@ -678,7 +674,6 @@ def ctd_rmloops(data, wthresh=0.1):
                 iloop = np.append(iloop, pmi - tmp)
             iloop = iloop.astype("int64")
         else:
-            nlp = np.array([])
             iloop = np.array([])
 
     iloop2 = np.unique(iloop)

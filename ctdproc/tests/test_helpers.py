@@ -70,9 +70,9 @@ def test_glitchcorrect(testdata2):
     diffx = 2
     prodx = 1
     y = helpers.glitchcorrect(testdata2, diffx, prodx)
-    assert np.all(np.absolute(y)<10)
+    assert np.all(np.absolute(y) < 10)
 
 
 def test_preen(testdata):
     xp = helpers.preen(testdata, xmin=-5, xmax=5)
-    assert np.all(np.absolute(xp)<10)
+    assert np.all(np.absolute(xp) < 10)
