@@ -12,3 +12,4 @@ pytest-datadir
 sphinx
 sphinx_rtd_theme
 black
+pre-commit

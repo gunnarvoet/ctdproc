@@ -47,8 +47,17 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
-lint: ## check style with flake8
-	flake8 ctdproc tests
+style: ## style code using isort & black, then check style using flake8
+	isort ctdproc/*.py
+	isort ctdproc/tests/*.py
+	black ctdproc
+	flake8 ctdproc 
+
+style-check: ## check code style using isort & black, then check style using flake8
+	isort -c ctdproc/*.py
+	isort -c ctdproc/tests/*.py
+	black --check ctdproc
+	flake8 ctdproc 
 
 test: ## run tests quickly with the default Python
 	pytest
