@@ -364,12 +364,15 @@ class CTD(object):
 
     def physicalunits(self):
         # pressure
-        self._p_atm = 10.1353
+        self._p_atm = 10.1353  # why not 10.1325 dbar?
         self.data = Munch()
         self.data.lon = self.dataraw.lon
         self.data.lat = self.dataraw.lat
-        self.data.p = self._freq2pressure(
-            self.dataraw.p, self.dataraw.pst, self.cfgp.PressureSensor.cal
+        self.data.p = (
+            self._freq2pressure(
+                self.dataraw.p, self.dataraw.pst, self.cfgp.PressureSensor.cal
+            )
+            - self._p_atm
         )
         self.data.t1 = self._freq2temp(
             self.dataraw.t1, self.cfgp.TemperatureSensor1.cal
