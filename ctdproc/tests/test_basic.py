@@ -1,6 +1,8 @@
 import pathlib
-import ctdproc as ctd
+
 import xarray as xr
+
+import ctdproc as ctd
 
 
 def test_success():

@@ -1,7 +1,8 @@
-import numpy as np
 import datetime
-from scipy.interpolate import interp1d
 import warnings
+
+import numpy as np
+from scipy.interpolate import interp1d
 
 
 def unique_arrays(*arrays):

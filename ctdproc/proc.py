@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
+import gsw
+import matplotlib as mpl
 import numpy as np
 import xarray as xr
-from scipy import signal, optimize, fft, stats
-import matplotlib as mpl
+from scipy import fft, optimize, signal, stats
+
+from . import calcs, helpers
 
 # We are running into trouble if the default backend is not installed
 # in the current python environment. Try to import pyplot the default
@@ -13,8 +16,6 @@ try:
 except ImportError:
     mpl.use("agg")
     import matplotlib.pyplot as plt
-import gsw
-from . import helpers, calcs
 
 
 def run_all(data):

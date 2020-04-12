@@ -14,24 +14,24 @@ setup(
     author_email="gvoet@ucsd.edu",
     url="https://github.com/gunnarvoet/ctdproc",
     license="MIT License",
-
     # Description
     description="Library for CTD data processing",
     long_description=f"{readme}\n\n{history}",
-    long_description_content_type='text/x-rst',
-    
+    long_description_content_type="text/x-rst",
     # Requirements
-    python_requires='>=3.6',
-    install_requires=["numpy",
-                      "xarray",
-                      "gsw",
-                      "scipy",
-                      "xmltodict",
-                      "pandas",
-                      "munch",
-                      "matplotlib"],
+    python_requires=">=3.6",
+    install_requires=[
+        "numpy",
+        "xarray",
+        "gsw",
+        "scipy",
+        "xmltodict",
+        "pandas",
+        "munch",
+        "matplotlib",
+    ],
     extras_require={
-        'test': [  # install these with: pip install ctdproc[test]
+        "test": [  # install these with: pip install ctdproc[test]
             "pytest>=3.8",
             "coverage>=4.5",
             "pytest-cov>=2.6",
@@ -39,19 +39,13 @@ setup(
             "codecov>=2.0",
         ],
     },
-
     # Packaging
-    packages=find_packages(include=["ctdproc", "ctdproc.*"],
-                           exclude=["*.tests"]),
+    packages=find_packages(include=["ctdproc", "ctdproc.*"], exclude=["*.tests"]),
     include_package_data=True,
     zip_safe=False,
-
     platforms=["any"],  # or more specific, e.g. "win32", "cygwin", "osx"
-
     # Metadata
-    project_urls={
-        "Documentation": "https://ctdproc.readthedocs.io",
-    },
+    project_urls={"Documentation": "https://ctdproc.readthedocs.io"},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
@@ -64,5 +58,4 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-
 )

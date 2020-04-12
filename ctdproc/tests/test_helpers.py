@@ -1,6 +1,7 @@
-import pytest
-from ctdproc import helpers
 import numpy as np
+import pytest
+
+from ctdproc import helpers
 
 
 @pytest.fixture

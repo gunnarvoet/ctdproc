@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
-import numpy as np
 import gsw
+import numpy as np
 from scipy import signal
+
 from . import helpers
 
 
