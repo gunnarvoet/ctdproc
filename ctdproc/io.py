@@ -359,7 +359,7 @@ class CTD(object):
             # convert any None items to 'N/A'
             for ki, v in self.cfgp[k].cal.items():
                 if v is None:
-                    self.cfgp[k].cal[ki] = 'N/A'
+                    self.cfgp[k].cal[ki] = "N/A"
 
     def physicalunits(self):
         # pressure
@@ -421,7 +421,7 @@ class CTD(object):
         return pres
 
     def _freq2temp(self, freq, tcal):
-        """Calculate  temperature given frequency and 
+        """Calculate  temperature given frequency and
         temperature calibration structure tcal
         D. Rudnick 01/06/05"""
 
