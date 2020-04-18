@@ -57,7 +57,7 @@ style-check: ## check code style using isort & black, then check style using fla
 	isort -c ctdproc/*.py
 	isort -c ctdproc/tests/*.py
 	black --check ctdproc
-	flake8 ctdproc 
+	flake8 ctdproc
 
 test: ## run tests quickly with the default Python
 	pytest

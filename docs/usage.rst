@@ -12,7 +12,7 @@ Converting hex data
 
 Locate your raw CTD data in hex format, for example::
 
-    hexfile = 'path/to/data.hex
+    hexfile = 'path/to/data.hex'
 
 As a first processing step, convert the raw hex-file into ascii data. Note that the corresponding xmlcon-file needs to be located in the same directory as the hex-file::
 
