@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 
 @pytest.mark.parametrize("dtype", ["int8", "int16", "int32", "int64"])

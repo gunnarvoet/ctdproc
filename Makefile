@@ -48,14 +48,12 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 style: ## style code using isort & black, then check style using flake8
-	isort ctdproc/*.py
-	isort ctdproc/tests/*.py
+	isort -rc ctdproc/
 	black ctdproc
 	flake8 ctdproc 
 
 style-check: ## check code style using isort & black, then check style using flake8
-	isort -c ctdproc/*.py
-	isort -c ctdproc/tests/*.py
+	isort -c -rc ctdproc/
 	black --check ctdproc
 	flake8 ctdproc
 

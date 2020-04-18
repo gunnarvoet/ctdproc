@@ -12,8 +12,10 @@ Bug Fixes
 ~~~~~~~~~
 * Fix bug in pressure conversion, was missing subtraction of atmospheric pressure.
 
-.. Documentation
-.. ~~~~~~~~~~~~~
+Documentation
+~~~~~~~~~~~~~
+
+* Add contributing guide. Mostly adapting `xarray's contributing guide <http://xarray.pydata.org/en/stable/contributing.html>`_ .
 
 .. Internal Changes
 .. ~~~~~~~~~~~~~~~~

@@ -28,6 +28,14 @@ ctdproc.tests.test\_helpers module
    :undoc-members:
    :show-inheritance:
 
+ctdproc.tests.test\_really\_cool\_feature module
+------------------------------------------------
+
+.. automodule:: ctdproc.tests.test_really_cool_feature
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 Module contents
 ---------------
