@@ -653,12 +653,16 @@ def ctd_rmloops(data, wthresh=0.1):
         flp = np.squeeze(np.argwhere(w < wthresh))
         if flp.size >= 1:
             ia, ib, ilen = helpers.findsegments(flp)
+            if ia[0] == ib[0] == 0:
+                ia = np.delete(ia, 0)
+                ib = np.delete(ib, 0)
             for start, stop in zip(ia, ib):
                 pmi = np.argmax(data.p[:stop]).data
                 pm = data.p[pmi].data
                 tmp = np.squeeze(np.where(data.p[pmi:] < pm))
                 iloop = np.append(iloop, pmi + 1)
                 iloop = np.append(iloop, pmi + tmp - 1)
+                iloop = np.unique(iloop)
             iloop = iloop.astype("int64")
         else:
             iloop = np.array([])
@@ -667,17 +671,19 @@ def ctd_rmloops(data, wthresh=0.1):
         flp = np.squeeze(np.argwhere(w > -wthresh))
         if flp.size >= 1:
             ia, ib, ilen = helpers.findsegments(flp)
+            if ia[0] == ib[0] == 0:
+                ia = np.delete(ia, 0)
+                ib = np.delete(ib, 0)
             for start, stop in zip(ia, ib):
                 pmi = np.argmax(data.p[:stop]).data
                 pm = data.p[pmi].data
                 tmp = np.squeeze(np.where(data.p[:pmi] < pm))
                 iloop = np.append(iloop, pmi)
                 iloop = np.append(iloop, pmi - tmp)
+                iloop = np.unique(iloop)
             iloop = iloop.astype("int64")
         else:
             iloop = np.array([])
-
-    iloop2 = np.unique(iloop)
 
     # get data variable names
     varnames = [k for k, v in data.data_vars.items()]
@@ -686,7 +692,7 @@ def ctd_rmloops(data, wthresh=0.1):
             varnames.remove(rmitem)
     # set loops to NaN
     for varn in varnames:
-        data[varn][iloop2] = np.nan
+        data[varn][iloop] = np.nan
 
     return data
 
