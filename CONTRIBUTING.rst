@@ -133,7 +133,7 @@ requires a Python environment.
 Creating a Python Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before starting any development, you'll need to create an isolated xarray
+Before starting any development, you'll need to create an isolated ctdproc
 development environment:
 
 - Install either `Anaconda <https://www.anaconda.com/download/>`_ or `miniconda
@@ -340,7 +340,7 @@ and then running::
 
    pre-commit install
 
-from the root of the xarray repository. You can skip the pre-commit checks
+from the root of the ctdproc repository. You can skip the pre-commit checks
 with ``git commit --no-verify``.
 
 
@@ -399,8 +399,7 @@ features that we like to use.
 - to set a mark on a parameter, ``pytest.param(..., marks=...)`` syntax should be used
 - ``fixture``, code for object construction, on a per-test basis
 - using bare ``assert`` for scalars and truth-testing
-- ``assert_equal`` and ``assert_identical`` from the ``xarray.testing`` module for xarray object comparisons.
-- the typical pattern of constructing an ``expected`` and comparing versus the ``result``
+
 
 We would name this file ``test_really_cool_feature.py`` and put in an appropriate place in the
 ``ctdproc/tests/`` structure.
