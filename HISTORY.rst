@@ -2,6 +2,23 @@
 History
 =======
 
+0.1.4 (unreleased)
+------------------
+
+.. New Features
+.. ~~~~~~~~~~~~
+
+Bug Fixes
+~~~~~~~~~
+* Fix bug in pressure conversion, was missing subtraction of atmospheric pressure.
+
+.. Documentation
+.. ~~~~~~~~~~~~~
+
+.. Internal Changes
+.. ~~~~~~~~~~~~~~~~
+
+
 0.1.3 (2020-04-10)
 ------------------
 
