@@ -321,7 +321,7 @@ ctdproc uses several tools to ensure a consistent code format throughout the pro
 
    pip install black flake8 isort mypy
 
-and then run from the root of the Xarray repository::
+and then run from the root of the `ctdproc` repository::
 
    isort -rc .
    black -t py36 .
