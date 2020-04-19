@@ -59,12 +59,17 @@ class CTD(object):
         if ~hasattr(self, "cfgp"):
             self.read_xml_config()
         if (
-            14 not in self.cfgp.loc["@index"].values
+            "14" not in self.cfgp.loc["@index"].values
             and "SPAR_Sensor" not in self.cfgp.loc["@index"].keys()
         ):
             self._hexoffset = -6
         else:
             self._hexoffset = 0
+        # self._extra_hexoffset = 0
+        if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
+            self._extra_hexoffset = 8
+        else:
+            self._extra_hexoffset = 0
 
     def parse_hex(self):
         # Generate data structure for converted data: 5 freq, 8 voltage channels
@@ -80,7 +85,6 @@ class CTD(object):
         tmp["ctdstatus"] = []
         tmp["lon"] = []
         tmp["lat"] = []
-        self._detect_missing_word()
 
         out = dict(header="")
 
@@ -91,10 +95,14 @@ class CTD(object):
                     pass
                 elif l[0] == "*":
                     out["header"] += l
-                    if l[0:5] == "*    ":
+                    # if l[0:5] == "*    ":
+                    # i = l.find("=")
+                    if l[0:17] == "* Number of Bytes":
                         i = l.find("=")
+                        self._bytes_per_scan = int(l[i + 2 :])
                 else:
                     break
+            self._detect_missing_word()
             # read data
             for l in fin:
                 # parse frequency channels
@@ -107,31 +115,74 @@ class CTD(object):
                     v1, v2 = self._hexword2volt(l[slice((i + 5) * 6, (i + 5) * 6 + 6)])
                     tmp["v{}".format(i * 2)].append(v1)
                     tmp["v{}".format(i * 2 + 1)].append(v2)
-                # parse other
-                tmp["modcount"].append(
-                    int(l[78 + self._hexoffset : 80 + self._hexoffset], 16)
-                )
-                tmp["time"].append(
-                    int(
-                        l[86 + self._hexoffset : 88 + self._hexoffset]
-                        + l[84 + self._hexoffset : 86 + self._hexoffset]
-                        + l[82 + self._hexoffset : 84 + self._hexoffset]
-                        + l[80 + self._hexoffset : 82 + self._hexoffset],
-                        16,
-                    )
-                )
-                pst, ctdstatus = self._hexword2pstat(
-                    l[slice(74 + self._hexoffset, 78 + self._hexoffset)]
-                )
-                tmp["pst"].append(pst)
-                tmp["ctdstatus"].append(ctdstatus)
-                if self._hexoffset != 0:
+                # parse other channels
+                # spar
+                if self._hexoffset == 0:
                     tmp["spar"].append(self._hexword2spar(l[slice(57, 60)]))
-                b, lat, lon = self._hexword2lonlat(
+                # gps
+                lat, lon = self._hexword2lonlat(
                     l[60 + self._hexoffset : 74 + self._hexoffset]
                 )
                 tmp["lon"].append(lon)
                 tmp["lat"].append(lat)
+                # pressure sensor temperature and ctd status
+                pst, ctdstatus = self._hexword2pstat(
+                    l[
+                        slice(
+                            74 + self._hexoffset + self._extra_hexoffset,
+                            78 + self._hexoffset + self._extra_hexoffset,
+                        )
+                    ]
+                )
+                tmp["pst"].append(pst)
+                tmp["ctdstatus"].append(ctdstatus)
+                # modcount
+                tmp["modcount"].append(
+                    int(
+                        l[
+                            78
+                            + self._hexoffset
+                            + self._extra_hexoffset : 80
+                            + self._hexoffset
+                            + self._extra_hexoffset
+                        ],
+                        16,
+                    )
+                )
+                # time
+                tmp["time"].append(
+                    int(
+                        l[
+                            86
+                            + self._hexoffset
+                            + self._extra_hexoffset : 88
+                            + self._hexoffset
+                            + self._extra_hexoffset
+                        ]
+                        + l[
+                            84
+                            + self._hexoffset
+                            + self._extra_hexoffset : 86
+                            + self._hexoffset
+                            + self._extra_hexoffset
+                        ]
+                        + l[
+                            82
+                            + self._hexoffset
+                            + self._extra_hexoffset : 84
+                            + self._hexoffset
+                            + self._extra_hexoffset
+                        ]
+                        + l[
+                            80
+                            + self._hexoffset
+                            + self._extra_hexoffset : 82
+                            + self._hexoffset
+                            + self._extra_hexoffset
+                        ],
+                        16,
+                    )
+                )
 
             # generate output array
             # frequency variables are always there
@@ -153,6 +204,8 @@ class CTD(object):
             out["ctdstatus"] = tmp["ctdstatus"]
             out["modcount"] = np.array(tmp["modcount"])
             out["time"] = np.array(tmp["time"])
+            if "spar" in tmp:
+                out["spar"] = np.array(tmp["spar"])
             self.dataraw = munchify(out)
 
     def _hexword2freq(self, hex_str):
@@ -228,7 +281,7 @@ class CTD(object):
             longitude and latitude
         """
         b = format(int(hex_str[12:14], 16), "08b")
-        newpos = int(b[7])
+        # newpos = int(b[7])
         lonneg = int(b[1])
         latneg = int(b[0])
         lat = (
@@ -249,7 +302,7 @@ class CTD(object):
             )
             / 5e4
         )
-        return newpos, lat, lon
+        return lat, lon
 
     def _hexword2spar(self, hex_str):
         """

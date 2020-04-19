@@ -26,6 +26,11 @@ This generates a class instance that holds the time series from each sensor and 
 
     c.cfgp
 
+Raw voltage and frequency data can be found under::
+
+    c.dataraw
+
+
 Save the raw time series as Matlab file::
 
     c.to_mat('dataraw.mat')
