@@ -2,7 +2,23 @@
 History
 =======
 
-0.1.4 (unreleased)
+0.1.5 (unreleased)
+------------------
+
+.. New Features
+.. ~~~~~~~~~~~~
+
+.. Bug Fixes
+.. ~~~~~~~~~
+
+.. Documentation
+.. ~~~~~~~~~~~~~
+
+.. Internal Changes
+.. ~~~~~~~~~~~~~~~~
+
+
+0.1.4 (2020-04-20)
 ------------------
 
 .. New Features
