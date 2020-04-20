@@ -12,6 +12,7 @@ Bug Fixes
 ~~~~~~~~~
 * Fix bug in pressure conversion, was missing subtraction of atmospheric pressure.
 * Enable reading hex files with 48 bytes per scan. Fixes :issue:`11`.
+* Enable reading hex files with 45 bytes per scan. Fixes :issue:`14`.
 
 Documentation
 ~~~~~~~~~~~~~

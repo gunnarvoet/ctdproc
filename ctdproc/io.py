@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
+import errno
+import os
 from pathlib import Path
 
 import numpy as np
@@ -52,9 +54,18 @@ class CTD(object):
         self.parse_hex()
         self.physicalunits()
 
-    def _detect_missing_word(self):
-        """Sometimes there is no SPAR sensor, in this case one hex word may be missing.
-        It lives on voltage channel 9.
+    def _detect_missing_words(self):
+        """
+        Determine location of data entries in hex file line.
+
+        Sometimes there is no SPAR sensor, in this case one hex word may
+        be missing. It lives on voltage channel 9.
+
+        Locating the right data entries also depends on the number of
+        bytes written per scan. We read this information from the
+        header.
+
+        For details, see p.67 in manual-11pV2_018.pdf
         """
         if ~hasattr(self, "cfgp"):
             self.read_xml_config()
@@ -65,8 +76,9 @@ class CTD(object):
             self._hexoffset = -6
         else:
             self._hexoffset = 0
-        # self._extra_hexoffset = 0
         if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
+            self._extra_hexoffset = 8
+        elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45:
             self._extra_hexoffset = 8
         else:
             self._extra_hexoffset = 0
@@ -102,7 +114,7 @@ class CTD(object):
                         self._bytes_per_scan = int(l[i + 2 :])
                 else:
                     break
-            self._detect_missing_word()
+            self._detect_missing_words()
             # read data
             for l in fin:
                 # parse frequency channels
@@ -367,8 +379,11 @@ class CTD(object):
     def read_xml_config(self):
         """Read xml config file."""
         self._find_xmlconfig()
-        with open(self.xmlfile) as fd:
-            tmp = xmltodict.parse(fd.read())
+        try:
+            with open(self.xmlfile) as fd:
+                tmp = xmltodict.parse(fd.read())
+        except OSError as e:
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), e.filename)
         tmp = tmp["SBE_InstrumentConfiguration"]
         tmp = tmp["Instrument"]
         sa = tmp["SensorArray"]["Sensor"]
