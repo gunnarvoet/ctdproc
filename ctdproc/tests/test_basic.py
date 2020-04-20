@@ -25,3 +25,15 @@ def test_read_hex(rootdir, tmpdir):
     cx.to_netcdf(p)
     cx2 = xr.open_dataset(p)
     assert type(cx2) == xr.core.dataset.Dataset
+
+
+def test_read_lajit(rootdir, tmpdir):
+    """Read test data from La Jolla Canyon."""
+    hexfile = rootdir / "data/lajit2-sr1614-001.hex"
+    assert type(hexfile) == pathlib.PosixPath
+    print(hexfile)
+    assert hexfile.exists()
+    c = ctd.io.CTD(hexfile)
+
+    cx = c.to_xarray()
+    assert type(cx) == xr.core.dataset.Dataset
