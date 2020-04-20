@@ -9,14 +9,14 @@ with open("HISTORY.rst") as history_file:
 setup(
     # Project information
     name="ctdproc",
-    version="0.1.3",
+    version="0.1.4",
     author="Gunnar Voet",
     author_email="gvoet@ucsd.edu",
     url="https://github.com/gunnarvoet/ctdproc",
     license="MIT License",
     # Description
     description="Library for CTD data processing",
-    long_description=f"{readme}\n\n{history}",
+    long_description=f"{readme}",
     long_description_content_type="text/x-rst",
     # Requirements
     python_requires=">=3.6",
