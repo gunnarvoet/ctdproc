@@ -378,7 +378,7 @@ class CTD(object):
         self.xmlfile = p.joinpath(xmlfile)
         # use os.listdir to find the actual case of the filename if the upper
         # case did not work.
-        if self.xmlfile not in os.listdir(os.path.dirname(self.xmlfile)):
+        if self.xmlfile.name not in os.listdir(os.path.dirname(self.xmlfile)):
             xmlfile = name.lower() + ".XMLCON"
             self.xmlfile = p.joinpath(xmlfile)
 
