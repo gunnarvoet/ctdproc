@@ -374,7 +374,11 @@ class CTD(object):
         name = pp.stem
         xmlfile = name.upper() + ".XMLCON"
         p = pp.parent
-        self.xmlfile = p.joinpath(xmlfile)
+        if p.joinpath(xmlfile).exists():
+            self.xmlfile = p.joinpath(xmlfile)
+        else:
+            xmlfile = name.upper() + ".XMLCON"
+            self.xmlfile = p.joinpath(xmlfile)
 
     def read_xml_config(self):
         """Read xml config file."""
