@@ -372,12 +372,14 @@ class CTD(object):
         Config file needs to be in the same directory as the hex file."""
         pp = Path(self.filename)
         name = pp.stem
+        # try upper case filename
         xmlfile = name.upper() + ".XMLCON"
         p = pp.parent
-        if p.joinpath(xmlfile).exists():
-            self.xmlfile = p.joinpath(xmlfile)
-        else:
-            xmlfile = name.upper() + ".XMLCON"
+        self.xmlfile = p.joinpath(xmlfile)
+        # use os.listdir to find the actual case of the filename if the upper
+        # case did not work.
+        if self.xmlfile not in os.listdir(os.path.dirname(self.xmlfile)):
+            xmlfile = name.lower() + ".XMLCON"
             self.xmlfile = p.joinpath(xmlfile)
 
     def read_xml_config(self):
