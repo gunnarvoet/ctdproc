@@ -33,11 +33,21 @@ sys.path.insert(0, os.path.abspath(".."))
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx.ext.napoleon"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.extlinks",
+]
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 napoleon_use_param = False
 napoleon_use_ivar = True
+
+extlinks = {
+    "issue": ("https://github.com/gunnarvoet/ctdproc/issues/%s", "GH"),
+    "pull": ("https://github.com/gunnarvoet/ctdproc/pull/%s", "PR"),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
