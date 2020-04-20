@@ -11,5 +11,6 @@ pytest-runner
 pytest-datadir
 sphinx
 sphinx_rtd_theme
+sphinx-issues
 black
 pre-commit
