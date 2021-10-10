@@ -2,11 +2,30 @@
 History
 =======
 
-0.1.5 (unreleased)
+0.1.6 (unreleased)
 ------------------
 
 .. New Features
 .. ~~~~~~~~~~~~
+
+.. Bug Fixes
+.. ~~~~~~~~~
+
+.. Documentation
+.. ~~~~~~~~~~~~~
+
+.. Internal Changes
+.. ~~~~~~~~~~~~~~~~
+
+
+0.1.5 (2021-10-10)
+------------------
+Including all minor changes up to BLT2 cruise in October 2021.
+
+New Features
+~~~~~~~~~~~~
+* Improve time handling
+* Add functions for saving profiles to .mat format
 
 .. Bug Fixes
 .. ~~~~~~~~~
