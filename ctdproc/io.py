@@ -36,9 +36,7 @@ class CTD(object):
             par="PAR_BiosphericalLicorChelseaSensor",
             trans="WET_LabsCStar",
         )
-        self._mapunits_volt = dict(
-            oxygen="", alt="m", spar="", fl="", par="", trans=""
-        )
+        self._mapunits_volt = dict(oxygen="", alt="m", spar="", fl="", par="", trans="")
         self._mapnames_freq = dict(
             t1="TemperatureSensor1",
             t2="TemperatureSensor2",
@@ -84,15 +82,9 @@ class CTD(object):
             self._hexoffset = -6
         else:
             self._hexoffset = 0
-        if (
-            "14" in self.cfgp.loc["@index"].values
-            and self._bytes_per_scan == 48
-        ):
+        if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
             self._extra_hexoffset = 8
-        elif (
-            "14" not in self.cfgp.loc["@index"].values
-            and self._bytes_per_scan == 45
-        ):
+        elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45:
             self._extra_hexoffset = 8
         else:
             self._extra_hexoffset = 0
@@ -141,9 +133,7 @@ class CTD(object):
                 for k in tmp.keys():
                     if "f" in k:
                         i = int(k[1])
-                        tmp[k].append(
-                            self._hexword2freq(line[slice(i * 6, i * 6 + 6)])
-                        )
+                        tmp[k].append(self._hexword2freq(line[slice(i * 6, i * 6 + 6)]))
                 # parse voltage channels
                 for i in range(4):
                     v1, v2 = self._hexword2volt(
@@ -417,9 +407,7 @@ class CTD(object):
             with open(self.xmlfile) as fd:
                 tmp = xmltodict.parse(fd.read())
         except OSError as e:
-            raise FileNotFoundError(
-                errno.ENOENT, os.strerror(errno.ENOENT), e.filename
-            )
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), e.filename)
         tmp = tmp["SBE_InstrumentConfiguration"]
         tmp = tmp["Instrument"]
         sa = tmp["SensorArray"]["Sensor"]
@@ -457,9 +445,7 @@ class CTD(object):
             for ki in self.cfgp[k].cal.keys():
                 if isinstance(self.cfgp[k]["cal"][ki], str):
                     if ki not in keep_strings:
-                        self.cfgp[k]["cal"][ki] = float(
-                            self.cfgp[k]["cal"][ki]
-                        )
+                        self.cfgp[k]["cal"][ki] = float(self.cfgp[k]["cal"][ki])
                 elif isinstance(self.cfgp[k]["cal"][ki], list):
                     for i, li in enumerate(self.cfgp[k]["cal"][ki]):
                         for kli in li.keys():
@@ -528,9 +514,7 @@ class CTD(object):
 
         c = pcal.C1 + Td * (pcal.C2 + Td * pcal.C3)
         d = pcal.D1 + Td * pcal.D2
-        t0 = pcal.T1 + Td * (
-            pcal.T2 + Td * (pcal.T3 + Td * (pcal.T4 + Td * pcal.T5))
-        )
+        t0 = pcal.T1 + Td * (pcal.T2 + Td * (pcal.T3 + Td * (pcal.T4 + Td * pcal.T5)))
         t0f = 1e-6 * t0 * freq
         fact = 1 - (t0f * t0f)
         pres = psi2dbar * (c * fact * (1 - d * fact))
@@ -544,11 +528,7 @@ class CTD(object):
 
         logf0f = np.log(tcal.F0 / freq)
         temp = (
-            1
-            / (
-                tcal.G
-                + logf0f * (tcal.H + logf0f * (tcal.I + logf0f * tcal.J))
-            )
+            1 / (tcal.G + logf0f * (tcal.H + logf0f * (tcal.I + logf0f * tcal.J)))
         ) - 273.15
         return temp
 

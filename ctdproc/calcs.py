@@ -86,9 +86,7 @@ def calc_temp(data):
     for si in ["1", "2"]:
         data["CT{:s}".format(si)] = (
             ["time"],
-            gsw.CT_from_t(
-                data["s{:s}".format(si)], data["t{:s}".format(si)], data.p
-            ),
+            gsw.CT_from_t(data["s{:s}".format(si)], data["t{:s}".format(si)], data.p),
             {"long_name": "conservative temperature", "units": "°C"},
         )
 

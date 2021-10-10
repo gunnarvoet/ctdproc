@@ -153,18 +153,10 @@ def ctd_cleanup2(data):
     difft = 1e-1
     ibefore = 1
     iafter = 1
-    data["c1"].data = helpers.glitchcorrect(
-        data.c1, diffc, prodc, ibefore, iafter
-    )
-    data["c2"].data = helpers.glitchcorrect(
-        data.c2, diffc, prodc, ibefore, iafter
-    )
-    data["t1"].data = helpers.glitchcorrect(
-        data.t1, difft, prodt, ibefore, iafter
-    )
-    data["t2"].data = helpers.glitchcorrect(
-        data.t2, difft, prodt, ibefore, iafter
-    )
+    data["c1"].data = helpers.glitchcorrect(data.c1, diffc, prodc, ibefore, iafter)
+    data["c2"].data = helpers.glitchcorrect(data.c2, diffc, prodc, ibefore, iafter)
+    data["t1"].data = helpers.glitchcorrect(data.t1, difft, prodt, ibefore, iafter)
+    data["t2"].data = helpers.glitchcorrect(data.t2, difft, prodt, ibefore, iafter)
 
     # Calculate salinity (both absolute and practical)
     data = calcs.calc_sal(data)
@@ -186,9 +178,7 @@ def ctd_cleanup2(data):
     ibefore = 2
     iafter = 2
     for vi in ["s1", "s2", "SA1", "SA2"]:
-        data[vi].data = helpers.glitchcorrect(
-            data[vi], diffs, prods, ibefore, iafter
-        )
+        data[vi].data = helpers.glitchcorrect(data[vi], diffs, prods, ibefore, iafter)
 
     # calculate potential/conservative temperature, potential density anomaly
     data = calcs.calc_temp(data)
@@ -204,9 +194,7 @@ def ctd_despike(data, var, spike_threshold):
     # and avoid the warning when nans are compared to a number. It broadcasts
     # to the original array size.
     ib = np.squeeze(
-        np.where(
-            np.greater(absdiff, spike_threshold, where=np.isfinite(absdiff))
-        )
+        np.where(np.greater(absdiff, spike_threshold, where=np.isfinite(absdiff)))
     )
     data[var][ib] = np.nan
     return data
@@ -306,9 +294,7 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
     N = 2 ** 9
 
     # only data within tcfit range.
-    ii = np.squeeze(
-        np.argwhere((data.p.data > tcfit[0]) & (data.p.data < tcfit[1]))
-    )
+    ii = np.squeeze(np.argwhere((data.p.data > tcfit[0]) & (data.p.data < tcfit[1])))
     i1 = ii[0]
     i2 = ii[-1]
     n = i2 - i1 + 1
@@ -325,20 +311,16 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
     # fft of each segment (row). Data are detrended, then windowed.
     window = signal.triang(N) * np.ones((m, N))
     At1 = fft.fft(
-        signal.detrend(np.reshape(data.t1.data[i1:i2], newshape=(m, N)))
-        * window
+        signal.detrend(np.reshape(data.t1.data[i1:i2], newshape=(m, N))) * window
     )
     At2 = fft.fft(
-        signal.detrend(np.reshape(data.t2.data[i1:i2], newshape=(m, N)))
-        * window
+        signal.detrend(np.reshape(data.t2.data[i1:i2], newshape=(m, N))) * window
     )
     Ac1 = fft.fft(
-        signal.detrend(np.reshape(data.c1.data[i1:i2], newshape=(m, N)))
-        * window
+        signal.detrend(np.reshape(data.c1.data[i1:i2], newshape=(m, N))) * window
     )
     Ac2 = fft.fft(
-        signal.detrend(np.reshape(data.c2.data[i1:i2], newshape=(m, N)))
-        * window
+        signal.detrend(np.reshape(data.c2.data[i1:i2], newshape=(m, N))) * window
     )
 
     # Positive frequencies only
@@ -485,9 +467,7 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
         if vi in data:
             Adi[vi] = np.real(fft.ifft(Ad[vi]))
             Adi[vi] = np.squeeze(
-                np.reshape(
-                    Adi[vi][:, int(N / 4) : (3 * int(N / 4))], newshape=(1, -1)
-                )
+                np.reshape(Adi[vi][:, int(N / 4) : (3 * int(N / 4))], newshape=(1, -1))
             )
 
     time = time[int(N / 4) : -int(N / 4)]
@@ -529,18 +509,10 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
     Ac2 = Ac2[:, 0 : int(N / 2)]
     fn = f[0 : int(N / 2)]
 
-    Et1n = (
-        2 * np.nanmean(np.absolute(At1[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    )
-    Et2n = (
-        2 * np.nanmean(np.absolute(At2[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    )
-    Ec1n = (
-        2 * np.nanmean(np.absolute(Ac1[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    )
-    Ec2n = (
-        2 * np.nanmean(np.absolute(Ac2[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    )
+    Et1n = 2 * np.nanmean(np.absolute(At1[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
+    Et2n = 2 * np.nanmean(np.absolute(At2[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
+    Ec1n = 2 * np.nanmean(np.absolute(Ac1[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
+    Ec2n = 2 * np.nanmean(np.absolute(Ac2[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
 
     # Cross Spectral Estimates
     Ct1c1n = 2 * np.nanmean(At1 * np.conj(Ac1) / df / N ** 2, axis=0)
@@ -587,9 +559,7 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
             [fn[50], fn[50]],
             [
                 dof * Et1n[100] / stats.distributions.chi2.ppf(0.05 / 2, dof),
-                dof
-                * Et1n[100]
-                / stats.distributions.chi2.ppf(1 - 0.05 / 2, dof),
+                dof * Et1n[100] / stats.distributions.chi2.ppf(1 - 0.05 / 2, dof),
             ],
             "k",
         )
@@ -610,9 +580,7 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
             [fn[50], fn[50]],
             [
                 dof * Ec1n[100] / stats.distributions.chi2.ppf(0.05 / 2, dof),
-                dof
-                * Ec1n[100]
-                / stats.distributions.chi2.ppf(1 - 0.05 / 2, dof),
+                dof * Ec1n[100] / stats.distributions.chi2.ppf(1 - 0.05 / 2, dof),
             ],
             "k",
         )
