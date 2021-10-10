@@ -2,6 +2,7 @@ import datetime
 import warnings
 
 import numpy as np
+import pandas as pd
 from scipy.interpolate import interp1d
 
 
@@ -110,6 +111,13 @@ def interpbadsegments(x, ibad):
     y : np.array
         Interpolated array
     """
+
+    def start_end_warning(loc):
+        warnings.warn(
+            message=f"no interpolation at {loc}",
+            category=RuntimeWarning,
+        )
+
     istart, istop, seglen = findsegments(ibad)
     y = x.copy()
     for iia, iis, iilen in zip(istart, istop, seglen):
@@ -117,9 +125,9 @@ def interpbadsegments(x, ibad):
         i2 = range(iia, iis + 1)
         i3 = iis + 1
         if i1 < 0:
-            print("interpbadsegments: bad at istart - no interpolation at start")
+            start_end_warning("start")
         elif i3 > x.size:
-            print("interpbadsegments: bad at istop - no interpolation at stop")
+            start_end_warning("end")
         else:
             y[i2] = interp1d(np.array([i1, i3]), x[[i1, i3]])(i2)
     return y
@@ -210,7 +218,7 @@ def preen(x, xmin, xmax):
     ii = np.squeeze(np.where(((x < xmin) | (x > xmax) | (np.imag(x) != 0))))
     indexclean = np.delete(indexall, ii)
     x = np.delete(x, ii)
-    xp = interp1d(indexclean, x)(indexall)
+    xp = interp1d(indexclean, x, bounds_error=False, fill_value="extrapolate")(indexall)
     return xp
 
 
@@ -292,3 +300,20 @@ def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False)
         t1 = np.array(t1)
 
     return t1
+
+
+def datetime2mtlb(dt):
+    pt = pd.to_datetime(dt)
+    dt = pt.to_pydatetime()
+    mdn = dt + datetime.timedelta(days=366)
+    frac_seconds = [
+        (dti - datetime.datetime(dti.year, dti.month, dti.day, 0, 0, 0)).seconds
+        / (24.0 * 60.0 * 60.0)
+        for dti in dt
+    ]
+    frac_microseconds = [
+        dti.microsecond / (24.0 * 60.0 * 60.0 * 1000000.0) for dti in dt
+    ]
+    out = np.array([mdni.toordinal() for mdni in mdn])
+    out = out.astype(float) + frac_seconds + frac_microseconds
+    return out

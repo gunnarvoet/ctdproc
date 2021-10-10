@@ -11,7 +11,7 @@ import xarray as xr
 import xmltodict
 from munch import Munch, munchify
 
-from .helpers import mtlb2datetime
+from .helpers import datetime2mtlb, mtlb2datetime
 
 
 class CTD(object):
@@ -44,7 +44,13 @@ class CTD(object):
             c2="ConductivitySensor2",
             p="PressureSensor",
         )
-        self._mapunits_freq = dict(t1="°C", t2="°C", c1="mS/cm", c2="mS/cm", p="dbar",)
+        self._mapunits_freq = dict(
+            t1="°C",
+            t2="°C",
+            c1="mS/cm",
+            c2="mS/cm",
+            p="dbar",
+        )
 
         # run all processing steps
         self._run_calcs()
@@ -83,7 +89,7 @@ class CTD(object):
         else:
             self._extra_hexoffset = 0
 
-    def parse_hex(self):
+    def parse_hex(self):  # noqa: C901
         # Generate data structure for converted data: 5 freq, 8 voltage channels
         tmp = {}
         for i in range(5):
@@ -102,44 +108,52 @@ class CTD(object):
 
         with open(self.filename, "rt") as fin:
             # read header
-            for l in fin:
-                if len(l) == 1:
+            for line in fin:
+                if len(line) == 1:
                     pass
-                elif l[0] == "*":
-                    out["header"] += l
+                elif line[0] == "*":
+                    out["header"] += line
                     # if l[0:5] == "*    ":
                     # i = l.find("=")
-                    if l[0:17] == "* Number of Bytes":
-                        i = l.find("=")
-                        self._bytes_per_scan = int(l[i + 2 :])
+                    if line[0:17] == "* Number of Bytes":
+                        i = line.find("=")
+                        self._bytes_per_scan = int(line[i + 2 :])
+                    if line[0:34] == "* Append System Time to Every Scan":
+                        self._hex_has_time = True
+                    else:
+                        self._hex_has_time = False
+                    if line[0:15] == "* System UTC = ":
+                        self.header_time_str = line[15:35]
                 else:
                     break
             self._detect_missing_words()
             # read data
-            for l in fin:
+            for line in fin:
                 # parse frequency channels
                 for k in tmp.keys():
                     if "f" in k:
                         i = int(k[1])
-                        tmp[k].append(self._hexword2freq(l[slice(i * 6, i * 6 + 6)]))
+                        tmp[k].append(self._hexword2freq(line[slice(i * 6, i * 6 + 6)]))
                 # parse voltage channels
                 for i in range(4):
-                    v1, v2 = self._hexword2volt(l[slice((i + 5) * 6, (i + 5) * 6 + 6)])
+                    v1, v2 = self._hexword2volt(
+                        line[slice((i + 5) * 6, (i + 5) * 6 + 6)]
+                    )
                     tmp["v{}".format(i * 2)].append(v1)
                     tmp["v{}".format(i * 2 + 1)].append(v2)
                 # parse other channels
                 # spar
                 if self._hexoffset == 0:
-                    tmp["spar"].append(self._hexword2spar(l[slice(57, 60)]))
-                # gps
+                    tmp["spar"].append(self._hexword2spar(line[slice(57, 60)]))
+                # gps (lives in word 9 together with SPAR)
                 lat, lon = self._hexword2lonlat(
-                    l[60 + self._hexoffset : 74 + self._hexoffset]
+                    line[60 + self._hexoffset : 74 + self._hexoffset]
                 )
                 tmp["lon"].append(lon)
                 tmp["lat"].append(lat)
                 # pressure sensor temperature and ctd status
                 pst, ctdstatus = self._hexword2pstat(
-                    l[
+                    line[
                         slice(
                             74 + self._hexoffset + self._extra_hexoffset,
                             78 + self._hexoffset + self._extra_hexoffset,
@@ -151,7 +165,7 @@ class CTD(object):
                 # modcount
                 tmp["modcount"].append(
                     int(
-                        l[
+                        line[
                             78
                             + self._hexoffset
                             + self._extra_hexoffset : 80
@@ -162,39 +176,40 @@ class CTD(object):
                     )
                 )
                 # time
-                tmp["time"].append(
-                    int(
-                        l[
-                            86
-                            + self._hexoffset
-                            + self._extra_hexoffset : 88
-                            + self._hexoffset
-                            + self._extra_hexoffset
-                        ]
-                        + l[
-                            84
-                            + self._hexoffset
-                            + self._extra_hexoffset : 86
-                            + self._hexoffset
-                            + self._extra_hexoffset
-                        ]
-                        + l[
-                            82
-                            + self._hexoffset
-                            + self._extra_hexoffset : 84
-                            + self._hexoffset
-                            + self._extra_hexoffset
-                        ]
-                        + l[
-                            80
-                            + self._hexoffset
-                            + self._extra_hexoffset : 82
-                            + self._hexoffset
-                            + self._extra_hexoffset
-                        ],
-                        16,
+                if self._hex_has_time:
+                    tmp["time"].append(
+                        int(
+                            line[
+                                86
+                                + self._hexoffset
+                                + self._extra_hexoffset : 88
+                                + self._hexoffset
+                                + self._extra_hexoffset
+                            ]
+                            + line[
+                                84
+                                + self._hexoffset
+                                + self._extra_hexoffset : 86
+                                + self._hexoffset
+                                + self._extra_hexoffset
+                            ]
+                            + line[
+                                82
+                                + self._hexoffset
+                                + self._extra_hexoffset : 84
+                                + self._hexoffset
+                                + self._extra_hexoffset
+                            ]
+                            + line[
+                                80
+                                + self._hexoffset
+                                + self._extra_hexoffset : 82
+                                + self._hexoffset
+                                + self._extra_hexoffset
+                            ],
+                            16,
+                        )
                     )
-                )
 
             # generate output array
             # frequency variables are always there
@@ -215,7 +230,10 @@ class CTD(object):
             out["pst"] = np.array(tmp["pst"])
             out["ctdstatus"] = tmp["ctdstatus"]
             out["modcount"] = np.array(tmp["modcount"])
-            out["time"] = np.array(tmp["time"])
+            if self._hex_has_time:
+                out["time"] = np.array(tmp["time"])
+            else:
+                out["time"] = self._generate_time_vector(len(out["t1"]))
             if "spar" in tmp:
                 out["spar"] = np.array(tmp["spar"])
             self.dataraw = munchify(out)
@@ -417,7 +435,12 @@ class CTD(object):
 
     def _xml_coeffs_to_float(self):
         # Convert calibration coefficients to floats.
-        keep_strings = ["@SensorID", "SerialNumber", "CalibrationDate", "UseG_J"]
+        keep_strings = [
+            "@SensorID",
+            "SerialNumber",
+            "CalibrationDate",
+            "UseG_J",
+        ]
         for k in self.cfgp.keys():
             for ki in self.cfgp[k].cal.keys():
                 if isinstance(self.cfgp[k]["cal"][ki], str):
@@ -553,10 +576,29 @@ class CTD(object):
         dtnum = dt / 24 / 3600 + 719529
         return dtnum
 
+    def mattime_to_sbetime(self, dt):
+        """Convert matlab time format to SBE time format."""
+        dtnum = (dt - 719529) * 24 * 3600
+        return dtnum
+
     def mattime_to_datetime64(self, dtnum):
         """Convert Matlab time format to numpy datetime64 time format."""
         dt64 = mtlb2datetime(dtnum)
         return dt64
+
+    def _generate_time_vector(self, length):
+        """generate time vector in SBE time format from a start time string"""
+        pt = pd.to_datetime(self.header_time_str)
+        # generate a 24Hz time vector
+        pr = pd.date_range(
+            pt,
+            periods=length,
+            freq="{}ns".format(np.int(np.round(1 / 24 * 1e9))),
+        )
+        # t = pr.to_numpy()
+        mattime = datetime2mtlb(pr.to_numpy())
+        sbetime = self.mattime_to_sbetime(mattime)
+        return sbetime
 
     def to_mat(self, matname):
         """Save data in Matlab format."""
@@ -582,7 +624,8 @@ class CTD(object):
         datavars = dsout.keys()
         ds_data = {var: (["time"], self.data[var]) for var in datavars}
         ds = xr.Dataset(
-            data_vars=dict(ds_data), coords={"time": (["time"], self.data["time"])}
+            data_vars=dict(ds_data),
+            coords={"time": (["time"], self.data["time"])},
         )
         # set attributes
         for k, v in self._mapnames_freq.items():
@@ -597,3 +640,19 @@ class CTD(object):
                 ds[k].attrs["long_name"] = v
                 ds[k].attrs["units"] = self._mapunits_volt[k]
         return ds
+
+
+def prof_to_mat(matname, datad, datau):
+    out = dict(
+        datad=datad,
+        datau=datau,
+    )
+    # a few adjustments before saving as .mat file
+    for k, v in out.items():
+        # matlab time as new variable
+        # out[k]['datenum'] = (['time'], datetime2mtlb(v.time.data))
+        # drop datetime64
+        out[k].drop("time")
+        # make coordinates variables so they are saved
+        out[k] = v.reset_coords()
+    sio.savemat(matname, out, format="5")

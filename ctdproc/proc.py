@@ -30,9 +30,9 @@ def run_all(data):
     Returns
     -------
     datad : xarray.Dataset
-        Downcast binned data
+        Downcast time series
     datau : xarray.Dataset
-        Upcast binned data
+        Upcast time series
     """
     data = ctd_cleanup(data)
 
@@ -74,8 +74,10 @@ def tcfit_default(data):
     """
     if data.p.max() > 1000:
         tcfit = [500, data.p.max().data]
-    else:
+    elif data.p.max() > 300:
         tcfit = [200, data.p.max().data]
+    else:
+        tcfit = [50, data.p.max().data]
     return tcfit
 
 
@@ -279,9 +281,11 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
     """
 
     # remove spikes
-    for field in ["t1", "t2", "c1", "c2"]:
-        ib = np.squeeze(np.where(np.absolute(np.diff(data[field].data)) > 0.5))
-        data[field][ib] = np.nan
+    # TODO: bring this back in. however, the function fails later on if there
+    # are nan's present. Could interpolate over anything that is just a few data points
+    # for field in ["t1", "t2", "c1", "c2"]:
+    #     ib = np.squeeze(np.where(np.absolute(np.diff(data[field].data)) > 0.5))
+    #     data[field][ib] = np.nan
 
     # ---Spectral Analysis of Raw Data---
     # 24Hz data
