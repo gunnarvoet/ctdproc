@@ -55,12 +55,28 @@ def calc_sal(data):
     SA2, SP2 = calc_allsal(data.c2, data.t2, data.p, data.lon, data.lat)
 
     # Absolute salinity
-    data["SA1"] = (["time"], SA1, {"long_name": "absolute salinity", "units": "g/kg"})
-    data["SA2"] = (["time"], SA2, {"long_name": "absolute salinity", "units": "g/kg"})
+    data["SA1"] = (
+        ["time"],
+        SA1,
+        {"long_name": "absolute salinity", "units": "g/kg"},
+    )
+    data["SA2"] = (
+        ["time"],
+        SA2,
+        {"long_name": "absolute salinity", "units": "g/kg"},
+    )
 
     # Practical salinity
-    data["s1"] = (["time"], SP1, {"long_name": "practical salinity", "units": ""})
-    data["s2"] = (["time"], SP2, {"long_name": "practical salinity", "units": ""})
+    data["s1"] = (
+        ["time"],
+        SP1,
+        {"long_name": "practical salinity", "units": ""},
+    )
+    data["s2"] = (
+        ["time"],
+        SP2,
+        {"long_name": "practical salinity", "units": ""},
+    )
 
     return data
 
@@ -70,7 +86,9 @@ def calc_temp(data):
     for si in ["1", "2"]:
         data["CT{:s}".format(si)] = (
             ["time"],
-            gsw.CT_from_t(data["s{:s}".format(si)], data["t{:s}".format(si)], data.p),
+            gsw.CT_from_t(
+                data["s{:s}".format(si)], data["t{:s}".format(si)], data.p
+            ),
             {"long_name": "conservative temperature", "units": "°C"},
         )
 
@@ -79,7 +97,10 @@ def calc_temp(data):
         data["th{:s}".format(si)] = (
             ["time"],
             gsw.pt_from_t(
-                data["SA{:s}".format(si)], data["t{:s}".format(si)], p=data.p, p_ref=0
+                data["SA{:s}".format(si)],
+                data["t{:s}".format(si)],
+                p=data.p,
+                p_ref=0,
             ),
             {"long_name": "potential temperature", "units": "°C"},
         )
@@ -92,7 +113,10 @@ def calc_sigma(data):
     for si in ["1", "2"]:
         data["sg{:s}".format(si)] = (
             ["time"],
-            gsw.sigma0(data["SA{:s}".format(si)], data["CT{:s}".format(si)],),
+            gsw.sigma0(
+                data["SA{:s}".format(si)],
+                data["CT{:s}".format(si)],
+            ),
             {"long_name": "potential density anomaly", "units": "kg/m$^3$"},
         )
     return data

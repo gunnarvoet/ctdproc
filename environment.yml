@@ -11,5 +11,5 @@ dependencies:
   - black
   - pip
   - pip:
-    - -r file:requirements.txt
-    - -r file:requirements_dev.txt
+    - -r requirements.txt
+    - -r requirements_dev.txt

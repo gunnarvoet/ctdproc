@@ -12,7 +12,9 @@ def test_dtypes(dtype):
     [
         "float32",
         pytest.param("int16", marks=pytest.mark.skip),
-        pytest.param("int32", marks=pytest.mark.xfail(reason="to show how it works")),
+        pytest.param(
+            "int32", marks=pytest.mark.xfail(reason="to show how it works")
+        ),
     ],
 )
 def test_mark(dtype):

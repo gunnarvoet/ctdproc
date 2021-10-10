@@ -218,7 +218,9 @@ def preen(x, xmin, xmax):
     ii = np.squeeze(np.where(((x < xmin) | (x > xmax) | (np.imag(x) != 0))))
     indexclean = np.delete(indexall, ii)
     x = np.delete(x, ii)
-    xp = interp1d(indexclean, x, bounds_error=False, fill_value="extrapolate")(indexall)
+    xp = interp1d(indexclean, x, bounds_error=False, fill_value="extrapolate")(
+        indexall
+    )
     return xp
 
 
@@ -241,7 +243,9 @@ def pad_lr(p, nPad):
     return p
 
 
-def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False):
+def mtlb2datetime(
+    matlab_datenum, strip_microseconds=False, strip_seconds=False
+):
     """
     Convert Matlab datenum format to python datetime.
     This version also works for vector input and strips
@@ -264,9 +268,9 @@ def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False)
 
     if np.size(matlab_datenum) == 1:
         day = datetime.datetime.fromordinal(int(matlab_datenum))
-        dayfrac = datetime.timedelta(days=matlab_datenum % 1) - datetime.timedelta(
-            days=366
-        )
+        dayfrac = datetime.timedelta(
+            days=matlab_datenum % 1
+        ) - datetime.timedelta(days=366)
         t1 = day + dayfrac
         if strip_microseconds and strip_seconds:
             t1 = datetime.datetime.replace(t1, microsecond=0, second=0)
@@ -286,10 +290,13 @@ def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False)
         tt = [day1 + dayfrac1 for day1, dayfrac1 in zip(day, dayfrac)]
         if strip_microseconds and strip_seconds:
             tt = [
-                datetime.datetime.replace(tval, microsecond=0, second=0) for tval in tt
+                datetime.datetime.replace(tval, microsecond=0, second=0)
+                for tval in tt
             ]
         elif strip_microseconds:
-            tt = [datetime.datetime.replace(tval, microsecond=0) for tval in tt]
+            tt = [
+                datetime.datetime.replace(tval, microsecond=0) for tval in tt
+            ]
         tt = [np.datetime64(ti) for ti in tt]
         xi = np.where(nonan)[0]
         for i, ii in enumerate(xi):
@@ -307,7 +314,9 @@ def datetime2mtlb(dt):
     dt = pt.to_pydatetime()
     mdn = dt + datetime.timedelta(days=366)
     frac_seconds = [
-        (dti - datetime.datetime(dti.year, dti.month, dti.day, 0, 0, 0)).seconds
+        (
+            dti - datetime.datetime(dti.year, dti.month, dti.day, 0, 0, 0)
+        ).seconds
         / (24.0 * 60.0 * 60.0)
         for dti in dt
     ]

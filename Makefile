@@ -48,14 +48,14 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 style: ## style code using isort & black, then check style using flake8
-	isort -rc ctdproc/
+	isort ctdproc/
 	black ctdproc
-	flake8 ctdproc 
+	flake8 --config=setup.cfg ctdproc 
 
 style-check: ## check code style using isort & black, then check style using flake8
 	isort -c -rc ctdproc/
 	black --check ctdproc
-	flake8 ctdproc
+	flake8 --config=setup.cfg ctdproc
 
 test: ## run tests quickly with the default Python
 	pytest
