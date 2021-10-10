@@ -9,7 +9,7 @@ with open("HISTORY.rst") as history_file:
 setup(
     # Project information
     name="ctdproc",
-    version="0.1.4",
+    version="0.1.5",
     author="Gunnar Voet",
     author_email="gvoet@ucsd.edu",
     url="https://github.com/gunnarvoet/ctdproc",
