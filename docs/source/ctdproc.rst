@@ -20,14 +20,6 @@ ctdproc.calcs module
    :undoc-members:
    :show-inheritance:
 
-ctdproc.data module
--------------------
-
-.. automodule:: ctdproc.data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 ctdproc.helpers module
 ----------------------
 
@@ -51,7 +43,6 @@ ctdproc.proc module
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 Module contents
 ---------------
