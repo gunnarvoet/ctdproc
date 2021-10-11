@@ -56,25 +56,25 @@ def calc_sal(data):
 
     # Absolute salinity
     data["SA1"] = (
-        ["time"],
-        SA1,
+        ("time",),
+        SA1.data,
         {"long_name": "absolute salinity", "units": "g/kg"},
     )
     data["SA2"] = (
-        ["time"],
-        SA2,
+        ("time",),
+        SA2.data,
         {"long_name": "absolute salinity", "units": "g/kg"},
     )
 
     # Practical salinity
     data["s1"] = (
-        ["time"],
-        SP1,
+        ("time",),
+        SP1.data,
         {"long_name": "practical salinity", "units": ""},
     )
     data["s2"] = (
-        ["time"],
-        SP2,
+        ("time",),
+        SP2.data,
         {"long_name": "practical salinity", "units": ""},
     )
 
@@ -85,21 +85,23 @@ def calc_temp(data):
     # Conservative temperature
     for si in ["1", "2"]:
         data["CT{:s}".format(si)] = (
-            ["time"],
-            gsw.CT_from_t(data["s{:s}".format(si)], data["t{:s}".format(si)], data.p),
+            ("time",),
+            gsw.CT_from_t(
+                data["s{:s}".format(si)], data["t{:s}".format(si)], data.p
+            ).data,
             {"long_name": "conservative temperature", "units": "°C"},
         )
 
     # Potential temperature
     for si in ["1", "2"]:
         data["th{:s}".format(si)] = (
-            ["time"],
+            ("time",),
             gsw.pt_from_t(
                 data["SA{:s}".format(si)],
                 data["t{:s}".format(si)],
                 p=data.p,
                 p_ref=0,
-            ),
+            ).data,
             {"long_name": "potential temperature", "units": "°C"},
         )
 
@@ -110,11 +112,11 @@ def calc_sigma(data):
     # Potential density anomaly
     for si in ["1", "2"]:
         data["sg{:s}".format(si)] = (
-            ["time"],
+            ("time",),
             gsw.sigma0(
                 data["SA{:s}".format(si)],
                 data["CT{:s}".format(si)],
-            ),
+            ).data,
             {"long_name": "potential density anomaly", "units": "kg/m$^3$"},
         )
     return data
@@ -123,8 +125,8 @@ def calc_sigma(data):
 def calc_depth(data):
     # Depth
     data.coords["depth"] = (
-        ["time"],
-        -1 * gsw.z_from_p(data.p, data.lat),
+        ("time",),
+        -1 * gsw.z_from_p(data.p, data.lat).data,
         {"long_name": "depth", "units": "m"},
     )
     return data

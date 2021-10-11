@@ -177,8 +177,8 @@ def ctd_cleanup2(data):
     diffs = 1e-3
     ibefore = 2
     iafter = 2
-    for vi in ["s1", "s2", "SA1", "SA2"]:
-        data[vi].data = helpers.glitchcorrect(data[vi], diffs, prods, ibefore, iafter)
+    for v in ["s1", "s2", "SA1", "SA2"]:
+        data[v].data = helpers.glitchcorrect(data[v], diffs, prods, ibefore, iafter)
 
     # calculate potential/conservative temperature, potential density anomaly
     data = calcs.calc_temp(data)
@@ -418,14 +418,14 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
         "ph",
     ]
     vard = {}
-    for vi in vars:
-        if vi in data:
-            vard[vi] = np.zeros((2 * m - 1, N))
-            vard[vi][: 2 * m - 1 : 2, :] = np.reshape(
-                data[vi].data[i1:i2], newshape=(m, N)
+    for v in vars:
+        if v in data:
+            vard[v] = np.zeros((2 * m - 1, N))
+            vard[v][: 2 * m - 1 : 2, :] = np.reshape(
+                data[v].data[i1:i2], newshape=(m, N)
             )
-            vard[vi][1::2, :] = np.reshape(
-                data[vi].data[i1 + int(N / 2) : i2 - int(N / 2)],
+            vard[v][1::2, :] = np.reshape(
+                data[v].data[i1 + int(N / 2) : i2 - int(N / 2)],
                 newshape=(m - 1, N),
             )
 
@@ -435,9 +435,9 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
 
     # FFTs of staggered segments (each row)
     Ad = {}
-    for vi in vars:
-        if vi in data:
-            Ad[vi] = fft.fft(vard[vi])
+    for v in vars:
+        if v in data:
+            Ad[v] = fft.fft(vard[v])
 
     # Corrected Fourier transforms of temperature.
     Ad["t1"] = Ad["t1"] * ((H1 * LP) * np.ones((2 * m - 1, 1)))
@@ -456,18 +456,18 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
         "oxygen2",
         "ph",
     ]
-    for vi in vars2:
-        if vi in data:
-            Ad[vi] = Ad[vi] * (LP * np.ones((2 * m - 1, 1)))
+    for v in vars2:
+        if v in data:
+            Ad[v] = Ad[v] * (LP * np.ones((2 * m - 1, 1)))
 
     # Inverse transforms of corrected temperature
     # and low passed other variables
     Adi = {}
-    for vi in vars:
-        if vi in data:
-            Adi[vi] = np.real(fft.ifft(Ad[vi]))
-            Adi[vi] = np.squeeze(
-                np.reshape(Adi[vi][:, int(N / 4) : (3 * int(N / 4))], newshape=(1, -1))
+    for v in vars:
+        if v in data:
+            Adi[v] = np.real(fft.ifft(Ad[v]))
+            Adi[v] = np.squeeze(
+                np.reshape(Adi[v][:, int(N / 4) : (3 * int(N / 4))], newshape=(1, -1))
             )
 
     time = time[int(N / 4) : -int(N / 4)]
@@ -476,12 +476,12 @@ def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
 
     # Generate output structure. Copy attributes over.
     out = xr.Dataset(coords={"time": time})
-    out["lon"] = (["time"], lon)
-    out["lat"] = (["time"], lat)
-    for vi in vars:
-        if vi in data:
-            out[vi] = (["time"], Adi[vi])
-            out[vi].attrs = data[vi].attrs
+    out["lon"] = lon
+    out["lat"] = lat
+    for v in vars:
+        if v in data:
+            out[v] = xr.DataArray(Adi[v], coords=(out.time,))
+            out[v].attrs = data[v].attrs
     out.attrs = dict(tau1=tau1, tau2=tau2, L1=L1, L2=L2)
 
     # ---Recalculate and replot spectra, coherence and phase---
@@ -666,7 +666,7 @@ def ctd_rmloops(data, wthresh=0.1):
                 ia = np.delete(ia, 0)
                 ib = np.delete(ib, 0)
             for start, stop in zip(ia, ib):
-                pmi = np.argmax(data.p[:stop]).data
+                pmi = np.argmax(data.p[:stop].data)
                 pm = data.p[pmi].data
                 tmp = np.squeeze(np.where(data.p[pmi:] < pm))
                 iloop = np.append(iloop, pmi + 1)
@@ -684,7 +684,7 @@ def ctd_rmloops(data, wthresh=0.1):
                 ia = np.delete(ia, 0)
                 ib = np.delete(ib, 0)
             for start, stop in zip(ia, ib):
-                pmi = np.argmax(data.p[:stop]).data
+                pmi = np.argmax(data.p[:stop].data)
                 pm = data.p[pmi].data
                 tmp = np.squeeze(np.where(data.p[:pmi] < pm))
                 iloop = np.append(iloop, pmi)
@@ -758,7 +758,7 @@ def ctd_bincast(data, dz, zmin, zmax):
     out.attrs = data.attrs
 
     # recalculate pressure from depth bins
-    out["p"] = (["z"], gsw.p_from_z(-1 * out.depth, out.lat))
+    out["p"] = (("z",), gsw.p_from_z(-1 * out.depth.data, out.lat.data))
     out.p.attrs = {"long_name": "pressure", "units": "dbar"}
 
     return out
