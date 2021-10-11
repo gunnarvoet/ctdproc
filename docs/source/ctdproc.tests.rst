@@ -36,7 +36,6 @@ ctdproc.tests.test\_really\_cool\_feature module
    :undoc-members:
    :show-inheritance:
 
-
 Module contents
 ---------------
 
