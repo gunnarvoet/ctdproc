@@ -22,7 +22,6 @@ class CTD(object):
     TODO:
       - Add oxygen hysteresis
       - Convert fluorometer voltage
-      - Profile editing and binning
     """
 
     def __init__(self, filename):
@@ -52,10 +51,10 @@ class CTD(object):
             p="dbar",
         )
 
-        # run all processing steps
-        self._run_calcs()
+        # extract all data and metadata and conver to physical units
+        self._extract_physical_data()
 
-    def _run_calcs(self):
+    def _extract_physical_data(self):
         self.read_xml_config()
         self.parse_hex()
         self.physicalunits()
