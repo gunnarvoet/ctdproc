@@ -18,7 +18,7 @@ except ImportError:
     import matplotlib.pyplot as plt
 
 
-def run_all(data):
+def run_all(data, wthresh=0.1):
     """
     Run all standard processing steps on raw CTD time series.
 
@@ -36,23 +36,17 @@ def run_all(data):
     """
     data = ctd_cleanup(data)
 
-    datad, datau = ctd_correction_updn(data)
+    datad, datau = ctd_split_updn(data)
+    data = {"down": datad, "up": datau}
 
     tcfit = tcfit_default(data)
-    datad = ctd_correction2(datad, tcfit)
-    datau = ctd_correction2(datau, tcfit)
+    for v, d in data.items():
+        d = ctd_phase_correct(d, tcfit)
+        d = calcs.swcalcs(d)
+        d = ctd_rmloops(d, wthresh)
+        data[v] = ctd_cleanup_ud(d)
 
-    datad = calcs.swcalcs(datad)
-    datau = calcs.swcalcs(datau)
-
-    wthresh = 0.1
-    datad = ctd_rmloops(datad, wthresh)
-    datau = ctd_rmloops(datau, wthresh)
-
-    datad = ctd_cleanup2(datad)
-    datau = ctd_cleanup2(datau)
-
-    return datad, datau
+    return data["down"], data["up"]
 
 
 def tcfit_default(data):
@@ -70,7 +64,7 @@ def tcfit_default(data):
     Returns
     -------
     tcfit : tuple
-        Upper and lower limit for tc fit in ctd_correction2.
+        Upper and lower limit for tc fit in ctd_phase_correct.
     """
     if data.p.max() > 1000:
         tcfit = [500, data.p.max().data]
@@ -139,46 +133,38 @@ def ctd_cleanup(data):
     return data
 
 
-def ctd_cleanup2(data):
+def ctd_cleanup_ud(data, spike_thresh={"t": 0.5, "s": 0.1}):
     """More cleaning and calculation of derived variables."""
 
     # remove spikes in temperature
-    data = ctd_despike(data, "t1", 0.5)
-    data = ctd_despike(data, "t2", 0.5)
+    for v in ["t1", "t2"]:
+        data = ctd_despike(data, v, spike_thresh["t"])
 
     # despike T, C
-    prodc = 5e-7
-    diffc = 1e-1
-    prodt = 1e-4
-    difft = 1e-1
+    prod = {"c": 5e-7, "t": 1e-4, "s": 1.0e-8}
+    diff = {"c": 1e-1, "t": 1e-1, "s": 1.0e-3}
     ibefore = 1
     iafter = 1
-    data["c1"].data = helpers.glitchcorrect(data.c1, diffc, prodc, ibefore, iafter)
-    data["c2"].data = helpers.glitchcorrect(data.c2, diffc, prodc, ibefore, iafter)
-    data["t1"].data = helpers.glitchcorrect(data.t1, difft, prodt, ibefore, iafter)
-    data["t2"].data = helpers.glitchcorrect(data.t2, difft, prodt, ibefore, iafter)
+    for v in ["c1", "c2", "t1", "t2"]:
+        data[v].data = helpers.glitchcorrect(
+            data[v], diff[v[0]], prod[v[0]], ibefore, iafter
+        )
 
     # Calculate salinity (both absolute and practical)
     data = calcs.calc_sal(data)
 
     # despike s
-    # remove spikes
-    data = ctd_despike(data, "s1", 0.1)
-    data = ctd_despike(data, "s2", 0.1)
-    data = ctd_despike(data, "SA1", 0.1)
-    data = ctd_despike(data, "SA2", 0.1)
-    # remove out of bounds data
-    data = ctd_remove_out_of_bounds(data, "s1", bmin=20, bmax=38)
-    data = ctd_remove_out_of_bounds(data, "s2", bmin=20, bmax=38)
-    data = ctd_remove_out_of_bounds(data, "SA1", bmin=20, bmax=38)
-    data = ctd_remove_out_of_bounds(data, "SA2", bmin=20, bmax=38)
-    # despike
-    prods = 1e-8
-    diffs = 1e-3
+    slim = [20, 38]
     ibefore = 2
     iafter = 2
     for v in ["s1", "s2", "SA1", "SA2"]:
-        data[v].data = helpers.glitchcorrect(data[v], diffs, prods, ibefore, iafter)
+        # remove spikes
+        data = ctd_despike(data, v, spike_thresh["s"])
+        # remove out of bounds data
+        data = ctd_remove_out_of_bounds(data, v, bmin=slim[0], bmax=slim[1])
+        data[v].data = helpers.glitchcorrect(
+            data[v], diff["s"], prod["s"], ibefore, iafter
+        )
 
     # calculate potential/conservative temperature, potential density anomaly
     data = calcs.calc_temp(data)
@@ -214,7 +200,7 @@ def ctd_remove_out_of_bounds(data, var, bmin, bmax):
     return data
 
 
-def ctd_preen(data):
+def ctd_preen(data, bounds={"p": [0, 6200], "t": [-2, 40], "c": [2.5, 6]}):
     """Remove spikes in p, t1, t2, c1, c2.
 
     Parameters
@@ -227,19 +213,18 @@ def ctd_preen(data):
     data : xarray.Dataset
         Cleaned dataset.
     """
-    data["p"].data = helpers.preen(data.p.data, 0, 6200)
-    data["t1"].data = helpers.preen(data.t1.data, -2, 40)
-    data["t2"].data = helpers.preen(data.t2.data, -2, 40)
-    data["c1"].data = helpers.preen(data.c1.data, 2.5, 6)
-    data["c2"].data = helpers.preen(data.c2.data, 2.5, 6)
+    for v in ["p", "t1", "t2", "c1", "c2"]:
+        data[v].data = helpers.preen(data[v].data, bounds[v[0]], bounds[v[1]])
+
     # TODO: remove spikes in oxygen, trans, fl in volts.
     return data
 
 
-def ctd_correction_updn(data):
+def ctd_split_updn(data):
     """
     Separate into down/up-casts and apply corrections.
 
+    ## TODO:
     - tc lag correction
     - thermal mass correction
     - lowpass-filter T, C, oxygen
@@ -265,7 +250,7 @@ def ctd_correction_updn(data):
     return datad, datau
 
 
-def ctd_correction2(data, tcfit, plot_spectra=None, plot_path=None):
+def ctd_phase_correct(data, tcfit, plot_spectra=None, plot_path=None):
     """
     Bring temperature and conductivity in phase.
 
