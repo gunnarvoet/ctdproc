@@ -746,7 +746,6 @@ def ctd_bincast(data, dz, zmin, zmax):
     # organize
     out.coords["time"] = btime
     out = out.set_coords(["lon", "lat"])
-    out = out.rename_dims({"depth_bins": "z"})
     out = out.rename({"depth_bins": "depth"})
 
     # copy attributes
@@ -758,7 +757,7 @@ def ctd_bincast(data, dz, zmin, zmax):
     out.attrs = data.attrs
 
     # recalculate pressure from depth bins
-    out["p"] = (("z",), gsw.p_from_z(-1 * out.depth.data, out.lat.data))
+    out["p"] = (("depth",), gsw.p_from_z(-1 * out.depth.data, out.lat.data))
     out.p.attrs = {"long_name": "pressure", "units": "dbar"}
 
     return out
