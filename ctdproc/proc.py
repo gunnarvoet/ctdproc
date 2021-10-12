@@ -214,7 +214,7 @@ def ctd_preen(data, bounds={"p": [0, 6200], "t": [-2, 40], "c": [2.5, 6]}):
         Cleaned dataset.
     """
     for v in ["p", "t1", "t2", "c1", "c2"]:
-        data[v].data = helpers.preen(data[v].data, bounds[v[0]], bounds[v[1]])
+        data[v].data = helpers.preen(data[v].data, bounds[v[0]][0], bounds[v[0]][1])
 
     # TODO: remove spikes in oxygen, trans, fl in volts.
     return data
