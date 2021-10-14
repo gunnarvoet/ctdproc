@@ -14,7 +14,34 @@ from munch import Munch, munchify
 from .helpers import datetime2mtlb, mtlb2datetime
 
 
-class CTD(object):
+def CTDx(filename):
+    c = CTDHex(filename).to_xarray()
+    add_default_proc_params(c)
+    return c
+
+
+def add_default_proc_params(ds):
+    ds.attrs["verbose"] = False
+    ds.attrs["bounds_p"] = [0.0, 6200.0]
+    ds.attrs["bounds_t"] = [-2.0, 40.0]
+    ds.attrs["bounds_c"] = [2.5, 6.0]
+    ds.attrs["bounds_s"] = [20, 38]
+    ds.attrs["spike_thresh_t"] = 0.5
+    ds.attrs["spike_thresh_s"] = 0.1
+    ds.attrs["prod_c"] = 5.0e-7
+    ds.attrs["prod_t"] = 1.0e-4
+    ds.attrs["prod_s"] = 1.0e-8
+    ds.attrs["prod_p"] = 1.0
+    ds.attrs["diff_c"] = 1.0e-1
+    ds.attrs["diff_t"] = 1.0e-1
+    ds.attrs["diff_s"] = 1.0e-3
+    ds.attrs["diff_p"] = 2.0
+    ds.attrs["wthresh"] = 0.1
+    ds.attrs["plot_spectra"] = None
+    ds.attrs["plot_path"] = None
+
+
+class CTDHex(object):
     """
     Converter for Seabird CTD data in hex format. Initialize with full path to hex file.
     xml config file needs to be located in the same directory.
@@ -592,7 +619,7 @@ class CTD(object):
         pr = pd.date_range(
             pt,
             periods=length,
-            freq="{}ns".format(np.int(np.round(1 / 24 * 1e9))),
+            freq="{}ns".format(np.int64(np.round(1 / 24 * 1e9))),
         )
         # t = pr.to_numpy()
         mattime = datetime2mtlb(pr.to_numpy())
