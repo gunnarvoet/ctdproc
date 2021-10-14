@@ -12,13 +12,12 @@ def unique_arrays(*arrays):
 
     Parameters
     ----------
-    arrays : np.array or list
-        Numpy arrays either in a list or separated by commas.
+    arrays : A tuple of np.array.ndarray
 
     Returns
     -------
     unique : np.array
-        Numpy array with unique elements from the input arrays.
+        numpy array with unique elements from the input arrays
     """
     return np.unique(np.hstack(arrays))
 
