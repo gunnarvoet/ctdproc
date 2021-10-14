@@ -47,7 +47,7 @@ def run_all(ds):
         d = cleanup_ud(d)
         ds_updown[v] = d
 
-    return ds_updown["down"], ds_updown["up"]
+    return ds_updown
 
 
 def plot_profile(ds, var_list):
@@ -511,7 +511,7 @@ def phase_correct(ds):
     # 	  stats.t.ppf(0.05, dof) * np.sqrt((1 - Coht2c2n) / (dof * Coht2c2n))
     # )
 
-    if ds.attrs["plot_spectra"] is not None:
+    if ds.attrs["plot_spectra"]:
         fig, ax = plt.subplots(
             nrows=2, ncols=2, figsize=(9, 7), constrained_layout=True
         )
@@ -597,7 +597,7 @@ def phase_correct(ds):
             "k--",
         )
 
-        if ds.attrs["plot_path"] is not None:
+        if ds.attrs["plot_path"] != "":
             plt.savefig(ds.attrs["plot_path"], dpi=200)
 
     return out

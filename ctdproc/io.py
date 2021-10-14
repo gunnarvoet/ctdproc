@@ -21,7 +21,7 @@ def CTDx(filename):
 
 
 def add_default_proc_params(ds):
-    ds.attrs["verbose"] = False
+    ds.attrs["verbose"] = 1
     ds.attrs["bounds_p"] = [0.0, 6200.0]
     ds.attrs["bounds_t"] = [-2.0, 40.0]
     ds.attrs["bounds_c"] = [2.5, 6.0]
@@ -37,8 +37,8 @@ def add_default_proc_params(ds):
     ds.attrs["diff_s"] = 1.0e-3
     ds.attrs["diff_p"] = 2.0
     ds.attrs["wthresh"] = 0.1
-    ds.attrs["plot_spectra"] = None
-    ds.attrs["plot_path"] = None
+    ds.attrs["plot_spectra"] = 0
+    ds.attrs["plot_path"] = ""
 
 
 class CTDHex(object):
