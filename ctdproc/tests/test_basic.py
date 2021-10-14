@@ -16,7 +16,7 @@ def test_read_hex(rootdir, tmpdir):
     assert type(hexfile) == pathlib.PosixPath
     print(hexfile)
     assert hexfile.exists()
-    c = ctd.io.CTD(hexfile)
+    c = ctd.io.CTDHex(hexfile)
 
     cx = c.to_xarray()
 
@@ -33,7 +33,7 @@ def test_read_lajit(rootdir, tmpdir):
     assert type(hexfile) == pathlib.PosixPath
     print(hexfile)
     assert hexfile.exists()
-    c = ctd.io.CTD(hexfile)
+    c = ctd.io.CTDHex(hexfile)
 
     cx = c.to_xarray()
     assert type(cx) == xr.core.dataset.Dataset
