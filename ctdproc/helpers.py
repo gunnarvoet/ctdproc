@@ -6,6 +6,14 @@ import pandas as pd
 from scipy.interpolate import interp1d
 
 
+def flatten(S):
+    if list(S) == []:
+        return list(S)
+    if isinstance(S[0], list) | isinstance(S[0], tuple) | isinstance(S[0], np.ndarray):
+        return flatten(list(S)[0]) + flatten(list(S)[1:])
+    return list(S)[:1] + flatten(list(S)[1:])
+
+
 def unique_arrays(*arrays):
     """
     Find unique elements in more than one numpy array.
@@ -20,8 +28,7 @@ def unique_arrays(*arrays):
     unique : np.array
         Numpy array with unique elements from the input arrays.
     """
-    h = np.hstack(np.squeeze(arrays))
-    return np.unique(h)
+    return np.unique(flatten(arrays))
 
 
 def findsegments(ibad):
@@ -218,7 +225,8 @@ def preen(x, xmin, xmax):
     ii = np.squeeze(np.where(((x < xmin) | (x > xmax) | (np.imag(x) != 0))))
     indexclean = np.delete(indexall, ii)
     x = np.delete(x, ii)
-    xp = interp1d(indexclean, x, bounds_error=False, fill_value="extrapolate")(indexall)
+    fint = interp1d(indexclean, x, bounds_error=False, fill_value=np.nan)
+    xp = fint(indexall)
     return xp
 
 
