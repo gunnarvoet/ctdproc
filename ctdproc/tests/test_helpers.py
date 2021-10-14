@@ -31,7 +31,7 @@ def test_unique_array():
     arr2 = np.array([1, 2, 3, 5])
     arr3 = np.array([1, 2])
     unique1 = helpers.unique_arrays(arr1, arr2)
-    unique2 = helpers.unique_arrays([arr1, arr2, arr3])
+    unique2 = helpers.unique_arrays(arr1, arr2, arr3)
     expect_out = np.array([1, 2, 3, 4, 5])
     assert np.array_equal(unique1, expect_out)
     assert np.array_equal(unique2, expect_out)
