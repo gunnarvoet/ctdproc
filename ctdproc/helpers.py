@@ -6,14 +6,6 @@ import pandas as pd
 from scipy.interpolate import interp1d
 
 
-def flatten(S):
-    if list(S) == []:
-        return list(S)
-    if isinstance(S[0], list) | isinstance(S[0], tuple) | isinstance(S[0], np.ndarray):
-        return flatten(list(S)[0]) + flatten(list(S)[1:])
-    return list(S)[:1] + flatten(list(S)[1:])
-
-
 def unique_arrays(*arrays):
     """
     Find unique elements in more than one numpy array.
@@ -28,7 +20,7 @@ def unique_arrays(*arrays):
     unique : np.array
         Numpy array with unique elements from the input arrays.
     """
-    return np.unique(flatten(arrays))
+    return np.unique(np.hstack(arrays))
 
 
 def findsegments(ibad):
@@ -94,10 +86,10 @@ def inearby(ibad, inearm, inearp, n):
         k = np.array([]).astype("int64")
     else:
         istart, istop, seglength = findsegments(ibad)
-        new_ind = []
+        new_ind = np.array([]).astype("int64")
         for ia, ib in zip(istart, istop):
-            new_ind.append(list(range(ia - inearm, ib + inearp + 1)))
-        k = unique_arrays(new_ind)
+            new_ind = np.append(new_ind, np.arange(ia - inearm, ib + inearp + 1))
+        k = np.unique(new_ind)
         k = k[((k >= 0) & (k < n))]
     return k
 
@@ -181,13 +173,17 @@ def glitchcorrect(x, diffx, prodx, ibefore=0, iafter=0):
     dmul2 = -dx[0:-1] * dx[1:]
     dmul3 = -dx[0:-2] * dx[2:]
 
-    ii2 = np.argwhere(
-        np.greater(dmul2, prodx, where=np.isfinite(dmul2))
-        & np.greater(dmin2, diffx, where=np.isfinite(dmin2))
+    ii2 = np.squeeze(
+        np.argwhere(
+            np.greater(dmul2, prodx, where=np.isfinite(dmul2))
+            & np.greater(dmin2, diffx, where=np.isfinite(dmin2))
+        )
     )
-    ii3 = np.argwhere(
-        np.greater(dmul3, prodx, where=np.isfinite(dmul3))
-        & np.greater(dmin3, diffx, where=np.isfinite(dmin3))
+    ii3 = np.squeeze(
+        np.argwhere(
+            np.greater(dmul3, prodx, where=np.isfinite(dmul3))
+            & np.greater(dmin3, diffx, where=np.isfinite(dmin3))
+        )
     )
 
     ii2 = unique_arrays(ii2, ii2 + 1)
@@ -195,6 +191,7 @@ def glitchcorrect(x, diffx, prodx, ibefore=0, iafter=0):
 
     jj2 = inearby(ii2, ibefore, iafter, nx)
     jj3 = inearby(ii3, ibefore, iafter, nx)
+
     jj = unique_arrays(jj2, jj3)
 
     if jj.size > 0:
