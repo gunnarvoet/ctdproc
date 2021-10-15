@@ -2,7 +2,7 @@
 History
 =======
 
-0.1.6 (unreleased)
+0.1.7 (unreleased)
 ------------------
 
 .. New Features
@@ -18,14 +18,19 @@ History
 .. ~~~~~~~~~~~~~~~~
 
 
-0.1.5 (2021-10-10)
+
+0.1.6 (unreleased)
 ------------------
-Including all minor changes up to BLT2 cruise in October 2021.
 
 New Features
 ~~~~~~~~~~~~
-* Improve time handling
-* Add functions for saving profiles to .mat format
+* Move hard coded parameters to function inputs. (:pull:`20`)
+* Include parameters and processing options as attributes in data structure. (Addressing :issue:`19`, :pull:`20`)
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+* Change the class name for the conversion from hex data. (:pull:`20`)
+* Remove `z` dimension for binned casts. (:pull:`20`)
 
 .. Bug Fixes
 .. ~~~~~~~~~
@@ -33,8 +38,20 @@ New Features
 .. Documentation
 .. ~~~~~~~~~~~~~
 
-.. Internal Changes
-.. ~~~~~~~~~~~~~~~~
+Internal Changes
+~~~~~~~~~~~~~~~~
+* Rename some functions to be more self-explanatory. (:pull:`20`)
+* Clean up variable names
+
+
+0.1.5 (2021-10-10)
+------------------
+Including all minor changes up to BLT2 cruise in October 2021.
+
+New Features
+~~~~~~~~~~~~
+* Improve time handling.
+* Add functions for saving profiles to .mat format.
 
 
 0.1.4 (2020-04-20)
