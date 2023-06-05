@@ -453,7 +453,7 @@ class CTDHex(object):
                         kstr = "{}{}".format(k, ci)
                     else:
                         kstr = k
-                    cfg[kstr] = si
+                    cfg[kstr] = si.copy()
                     cfg[kstr]["cal"] = munchify(cfg[kstr][k])
                     del cfg[kstr][k]
         self.cfgp = pd.DataFrame(cfg)
