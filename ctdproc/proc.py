@@ -261,7 +261,7 @@ def phase_correct(ds):
     # 24Hz data
     dt = 1 / 24
     # number of points per segment
-    N = 2 ** 9
+    N = 2**9
 
     # only data within tcfit range.
     ii = np.squeeze(
@@ -311,14 +311,14 @@ def phase_correct(ds):
     # Spectral Estimates. Note: In Matlab, At1*conj(At1) is not complex anymore.
     # Here, it is still a complex number but the imaginary part is zero.
     # We keep only the real part to stay consistent.
-    Et1 = 2 * np.real(np.nanmean(At1 * np.conj(At1) / df / N ** 2, axis=0))
-    Et2 = 2 * np.real(np.nanmean(At2 * np.conj(At2) / df / N ** 2, axis=0))
-    Ec1 = 2 * np.real(np.nanmean(Ac1 * np.conj(Ac1) / df / N ** 2, axis=0))
-    Ec2 = 2 * np.real(np.nanmean(Ac2 * np.conj(Ac2) / df / N ** 2, axis=0))
+    Et1 = 2 * np.real(np.nanmean(At1 * np.conj(At1) / df / N**2, axis=0))
+    Et2 = 2 * np.real(np.nanmean(At2 * np.conj(At2) / df / N**2, axis=0))
+    Ec1 = 2 * np.real(np.nanmean(Ac1 * np.conj(Ac1) / df / N**2, axis=0))
+    Ec2 = 2 * np.real(np.nanmean(Ac2 * np.conj(Ac2) / df / N**2, axis=0))
 
     # Cross Spectral Estimates
-    Ct1c1 = 2 * np.nanmean(At1 * np.conj(Ac1) / df / N ** 2, axis=0)
-    Ct2c2 = 2 * np.nanmean(At2 * np.conj(Ac2) / df / N ** 2, axis=0)
+    Ct1c1 = 2 * np.nanmean(At1 * np.conj(Ac1) / df / N**2, axis=0)
+    Ct2c2 = 2 * np.nanmean(At2 * np.conj(Ac2) / df / N**2, axis=0)
 
     # Squared Coherence Estimates
     Coht1c1 = np.real(Ct1c1 * np.conj(Ct1c1) / (Et1 * Ec1))
@@ -482,14 +482,14 @@ def phase_correct(ds):
     Ac2 = Ac2[:, 0 : int(N / 2)]
     fn = f[0 : int(N / 2)]
 
-    Et1n = 2 * np.nanmean(np.absolute(At1[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    Et2n = 2 * np.nanmean(np.absolute(At2[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    Ec1n = 2 * np.nanmean(np.absolute(Ac1[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
-    Ec2n = 2 * np.nanmean(np.absolute(Ac2[:, : int(N / 2)]) ** 2, 0) / df / N ** 2
+    Et1n = 2 * np.nanmean(np.absolute(At1[:, : int(N / 2)]) ** 2, 0) / df / N**2
+    Et2n = 2 * np.nanmean(np.absolute(At2[:, : int(N / 2)]) ** 2, 0) / df / N**2
+    Ec1n = 2 * np.nanmean(np.absolute(Ac1[:, : int(N / 2)]) ** 2, 0) / df / N**2
+    Ec2n = 2 * np.nanmean(np.absolute(Ac2[:, : int(N / 2)]) ** 2, 0) / df / N**2
 
     # Cross Spectral Estimates
-    Ct1c1n = 2 * np.nanmean(At1 * np.conj(Ac1) / df / N ** 2, axis=0)
-    Ct2c2n = 2 * np.nanmean(At2 * np.conj(Ac2) / df / N ** 2, axis=0)
+    Ct1c1n = 2 * np.nanmean(At1 * np.conj(Ac1) / df / N**2, axis=0)
+    Ct2c2n = 2 * np.nanmean(At2 * np.conj(Ac2) / df / N**2, axis=0)
 
     # Squared Coherence Estimates
     Coht1c1n = np.real(Ct1c1n * np.conj(Ct1c1n) / (Et1n * Ec1n))
@@ -727,12 +727,22 @@ def bincast(ds, dz, zmin, zmax):
     varnames = [k for k, v in ds.data_vars.items()]
     for vari in varnames:
         out[vari].attrs = ds[vari].attrs
-    out["depth"].attrs = {"long_name": "depth", "units": "m"}
+    out["depth"].attrs = {
+        "long_name": "Depth",
+        "units": "m",
+        "standard_name": "depth",
+        "positive": "down",
+    }
     out.attrs = ds.attrs
 
     # recalculate pressure from depth bins
     out["p"] = (("depth",), gsw.p_from_z(-1 * out.depth.data, out.lat.data))
-    out.p.attrs = {"long_name": "pressure", "units": "dbar"}
+    out.p.attrs = {
+        "long_name": "pressure",
+        "units": "dbar",
+        "standard_name": "sea_water_pressure",
+        "positive": "down",
+    }
 
     return out
 

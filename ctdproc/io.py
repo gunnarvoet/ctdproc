@@ -583,7 +583,7 @@ class CTDHex(object):
         """Calculate PAR data from voltage."""
         par = (
             cal.Multiplier
-            * (10 ** 9 * 10 ** ((volt - cal.B) / cal.M))
+            * (10**9 * 10 ** ((volt - cal.B) / cal.M))
             / cal.CalibrationConstant
         ) + cal.Offset
         return par
@@ -651,7 +651,19 @@ class CTDHex(object):
         ds_data = {var: (["time"], self.data[var]) for var in datavars}
         ds = xr.Dataset(
             data_vars=dict(ds_data),
-            coords={"time": (["time"], self.data["time"])},
+            coords={
+                "time": (
+                    ["time"],
+                    # Convert to seconds since 1970-01-01
+                    (self.data["time"] - np.datetime64("1970-01-01")).astype(float)
+                    / 1e9,
+                    {
+                        "long_name": "Time",
+                        "standard_name": "time",
+                        "units": "seconds since 1970-01-01",
+                    },
+                )
+            },
         )
         # set attributes
         for k, v in self._mapnames_freq.items():

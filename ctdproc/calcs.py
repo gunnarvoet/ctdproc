@@ -58,24 +58,40 @@ def calc_sal(data):
     data["SA1"] = (
         ("time",),
         SA1.data,
-        {"long_name": "absolute salinity", "units": "g/kg"},
+        {
+            "long_name": "Absolute salinity",
+            "units": "g kg-1",
+            "standard_name": "sea_water_absolute_salinity",
+        },
     )
     data["SA2"] = (
         ("time",),
         SA2.data,
-        {"long_name": "absolute salinity", "units": "g/kg"},
+        {
+            "long_name": "Absolute salinity",
+            "units": "g kg-1",
+            "standard_name": "sea_water_absolute_salinity",
+        },
     )
 
     # Practical salinity
     data["s1"] = (
         ("time",),
         SP1.data,
-        {"long_name": "practical salinity", "units": ""},
+        {
+            "long_name": "Practical salinity",
+            "units": "",
+            "standard_name": "sea_water_practical_salinity",
+        },
     )
     data["s2"] = (
         ("time",),
         SP2.data,
-        {"long_name": "practical salinity", "units": ""},
+        {
+            "long_name": "Practical salinity",
+            "units": "",
+            "standard_name": "sea_water_practical_salinity",
+        },
     )
 
     return data
@@ -89,7 +105,11 @@ def calc_temp(data):
             gsw.CT_from_t(
                 data["s{:s}".format(si)], data["t{:s}".format(si)], data.p
             ).data,
-            {"long_name": "conservative temperature", "units": "°C"},
+            {
+                "long_name": "Conservative temperature",
+                "units": "degree_C",
+                "standard_name": "sea_water_conservative_temperature",
+            },
         )
 
     # Potential temperature
@@ -102,7 +122,11 @@ def calc_temp(data):
                 p=data.p,
                 p_ref=0,
             ).data,
-            {"long_name": "potential temperature", "units": "°C"},
+            {
+                "long_name": "Potential temperature",
+                "units": "degree_C",
+                "standard_name": "sea_water_potential_temperature",
+            },
         )
 
     return data
@@ -117,7 +141,12 @@ def calc_sigma(data):
                 data["SA{:s}".format(si)],
                 data["CT{:s}".format(si)],
             ).data,
-            {"long_name": "potential density anomaly", "units": "kg/m$^3$"},
+            {
+                "long_name": "Potential density anomaly",
+                "units": "kg m-3",
+                "standard_name": "sea_water_sigma_theta",
+                "reference_pressure": "0 dbar",
+            },
         )
     return data
 
@@ -127,7 +156,12 @@ def calc_depth(data):
     data.coords["depth"] = (
         ("time",),
         -1 * gsw.z_from_p(data.p, data.lat).data,
-        {"long_name": "depth", "units": "m"},
+        {
+            "long_name": "Depth",
+            "units": "m",
+            "standard_name": "depth",
+            "positive": "down",
+        },
     )
     return data
 
