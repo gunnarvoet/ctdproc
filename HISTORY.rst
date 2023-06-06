@@ -32,8 +32,9 @@ Breaking Changes
 * Change the class name for the conversion from hex data. (:pull:`20`)
 * Remove `z` dimension for binned casts. (:pull:`20`)
 
-.. Bug Fixes
-.. ~~~~~~~~~
+Bug Fixes
+~~~~~~~~~
+* Fix byte offset for reading hex file on R/V Armstrong (cruise AR73 May 2023). (:pull:`26`)
 
 .. Documentation
 .. ~~~~~~~~~~~~~
