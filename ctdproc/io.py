@@ -78,7 +78,7 @@ class CTDHex(object):
             p="dbar",
         )
 
-        # extract all data and metadata and conver to physical units
+        # extract all data and metadata and convert to physical units
         self._extract_physical_data()
 
     def _extract_physical_data(self):
@@ -109,6 +109,9 @@ class CTDHex(object):
         else:
             self._hexoffset = 0
         if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
+            self._extra_hexoffset = 8
+        # it seems like this combination also needs an extra offset:
+        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 44:
             self._extra_hexoffset = 8
         elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45:
             self._extra_hexoffset = 8
@@ -434,15 +437,13 @@ class CTDHex(object):
                 tmp = xmltodict.parse(fd.read())
         except OSError as e:
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), e.filename)
-        tmp = tmp["SBE_InstrumentConfiguration"]
-        tmp = tmp["Instrument"]
-        sa = tmp["SensorArray"]["Sensor"]
-        # parse only valide sensors
+        sa = tmp["SBE_InstrumentConfiguration"]["Instrument"]["SensorArray"]["Sensor"]
+        # parse only valid sensors
         cfg = {}
         ti = 0
         ci = 0
         for si in sa:
-            keys = si.keys()
+            keys = list(si.keys())
             for k in keys:
                 if "@" not in k and k != "NotInUse":
                     if k == "TemperatureSensor":
@@ -583,7 +584,7 @@ class CTDHex(object):
         """Calculate PAR data from voltage."""
         par = (
             cal.Multiplier
-            * (10 ** 9 * 10 ** ((volt - cal.B) / cal.M))
+            * (10**9 * 10 ** ((volt - cal.B) / cal.M))
             / cal.CalibrationConstant
         ) + cal.Offset
         return par
