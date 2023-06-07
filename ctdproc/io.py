@@ -54,29 +54,71 @@ class CTDHex(object):
     def __init__(self, filename):
         self.filename = filename
 
-        self._mapnames_volt = dict(
-            oxygen="OxygenSensor",
-            alt="AltimeterSensor",
-            spar="SPAR_Sensor",
-            fl="FluoroSeapointSensor",
-            par="PAR_BiosphericalLicorChelseaSensor",
-            trans="WET_LabsCStar",
+        self._map_attrs = dict(
+            lon=dict(
+                name="",
+                long_name="Longitude",
+                standard_name="longitude",
+                units="degree_east",
+            ),
+            lat=dict(
+                name="",
+                long_name="Latitude",
+                standard_name="latitude",
+                units="degree_north",
+            ),
+            t1=dict(
+                name="TemperatureSensor1",
+                long_name="Temperature",
+                standard_name="sea_water_temperature",
+                units="degree_C",
+            ),
+            t2=dict(
+                name="TemperatureSensor2",
+                long_name="Temperature",
+                standard_name="sea_water_temperature",
+                units="degree_C",
+            ),
+            c1=dict(
+                name="ConductivitySensor1",
+                long_name="Conductivity",
+                standard_name="sea_water_conductivity",
+                units="mS cm-1",
+            ),
+            c2=dict(
+                name="ConductivitySensor2",
+                long_name="Conductivity",
+                standard_name="sea_water_conductivity",
+                units="mS cm-1",
+            ),
+            p=dict(
+                name="PressureSensor",
+                long_name="Pressure",
+                standard_name="sea_water_pressure",
+                units="dbar",
+                positive="down",
+            ),
+            oxygen=dict(
+                name="OxygenSensor",
+                long_name="Oxygen",
+                standard_name="mass_concentration_of_oxygen_in_sea_water",
+                units="mg l-1",
+            ),
+            alt=dict(
+                name="AltimeterSensor",
+                long_name="Height above bottom",
+                standard_name="height_above_sea_floor",
+                units="m",
+            ),
+            spar=dict(name="SPAR_Sensor", long_name="SPAR"),
+            fl=dict(name="FluoroSeapointSensor", long_name="Fluorescence"),
+            par=dict(name="PAR_BiosphericalLicorChelseaSensor", long_name="PAR"),
+            trans=dict(name="WET_LabsCStar", long_name="Transmissivity"),
+            modcount=dict(name="modcount"),
         )
-        self._mapunits_volt = dict(oxygen="", alt="m", spar="", fl="", par="", trans="")
-        self._mapnames_freq = dict(
-            t1="TemperatureSensor1",
-            t2="TemperatureSensor2",
-            c1="ConductivitySensor1",
-            c2="ConductivitySensor2",
-            p="PressureSensor",
-        )
-        self._mapunits_freq = dict(
-            t1="°C",
-            t2="°C",
-            c1="mS/cm",
-            c2="mS/cm",
-            p="dbar",
-        )
+
+        volt_vars = ["oxygen", "alt", "spar", "fl", "par", "trans"]
+        self._mapnames_volt = {v: self._map_attrs[v] for v in volt_vars}
 
         # extract all data and metadata and conver to physical units
         self._extract_physical_data()
@@ -244,8 +286,8 @@ class CTDHex(object):
                 out[k] = np.array(tmp["f{}".format(i)])
             # voltage variables. see which ones we have
             for k, v in self._mapnames_volt.items():
-                if v in self.cfgp.keys():
-                    channel = int(self.cfgp[v]["@index"])
+                if v["name"] in self.cfgp.keys():
+                    channel = int(self.cfgp[v["name"]]["@index"])
                     vchannel = channel - 5
                     if vchannel < 8:
                         out[k] = np.array(tmp["v{}".format(vchannel)])
@@ -520,11 +562,11 @@ class CTDHex(object):
             self.data.fl = self.dataraw.fl
         if hasattr(self.dataraw, "trans"):
             self.data.trans = self._volt2trans(
-                self.dataraw.trans, self.cfgp[self._mapnames_volt["trans"]].cal
+                self.dataraw.trans, self.cfgp[self._mapnames_volt["trans"]["name"]].cal
             )
         if hasattr(self.dataraw, "par"):
             self.data.par = self._volt2par(
-                self.dataraw.par, self.cfgp[self._mapnames_volt["par"]].cal
+                self.dataraw.par, self.cfgp[self._mapnames_volt["par"]["name"]].cal
             )
         self.data.modcount = self.dataraw.modcount
         self._check_modcount_errors(self.data.modcount)
@@ -666,17 +708,15 @@ class CTDHex(object):
             },
         )
         # set attributes
-        for k, v in self._mapnames_freq.items():
-            ds[k].attrs["SN"] = self.cfgp[v].cal["SerialNumber"]
-            ds[k].attrs["CalDate"] = self.cfgp[v].cal["CalibrationDate"]
-            ds[k].attrs["long_name"] = v
-            ds[k].attrs["units"] = self._mapunits_freq[k]
-        for k, v in self._mapnames_volt.items():
-            if k in ds:
-                ds[k].attrs["SN"] = self.cfgp[v].cal["SerialNumber"]
-                ds[k].attrs["CalDate"] = self.cfgp[v].cal["CalibrationDate"]
-                ds[k].attrs["long_name"] = v
-                ds[k].attrs["units"] = self._mapunits_volt[k]
+        for k in ds.data_vars:
+            v = self._map_attrs[k]
+            name = v.pop("name")
+            ds[k].attrs = {**ds[k].attrs, **v}
+            if name not in self.cfgp:
+                continue
+            ds[k].attrs["serial_number"] = self.cfgp[name].cal["SerialNumber"]
+            ds[k].attrs["calibration_date"] = self.cfgp[name].cal["CalibrationDate"]
+
         return ds
 
 
