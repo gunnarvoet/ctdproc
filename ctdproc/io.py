@@ -705,7 +705,7 @@ class CTDHex(object):
                     {
                         "long_name": "Time",
                         "standard_name": "time",
-                        # "units": "seconds since 1970-01-01",
+                        "units": "seconds since 1970-01-01",
                     },
                 )
             },
