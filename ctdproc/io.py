@@ -692,18 +692,20 @@ class CTDHex(object):
         dsout.pop("dtnum")
         datavars = dsout.keys()
         ds_data = {var: (["time"], self.data[var]) for var in datavars}
+
         ds = xr.Dataset(
             data_vars=dict(ds_data),
             coords={
                 "time": (
                     ["time"],
                     # Convert to seconds since 1970-01-01
+                    # NOTE: self.data["time"] is in microseconds
                     (self.data["time"] - np.datetime64("1970-01-01")).astype(float)
-                    / 1e9,
+                    / 1e6,
                     {
                         "long_name": "Time",
                         "standard_name": "time",
-                        "units": "seconds since 1970-01-01",
+                        # "units": "seconds since 1970-01-01",
                     },
                 )
             },
