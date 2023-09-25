@@ -197,15 +197,8 @@ def despike(da, spike_threshold):
 
 def remove_out_of_bounds(da, bmin, bmax):
     """Remove out of bounds data."""
-    ib = np.squeeze(
-        np.where(
-            (
-                (np.greater(da, bmax, where=np.isfinite(da)))
-                | (np.less(da, bmin, where=np.isfinite(da)))
-            )
-        )
-    )
-    da[ib] = np.nan
+    
+    da = da.where((da<=bmax) & (da>=bmin))
 
     return da
 
