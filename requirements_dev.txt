@@ -2,10 +2,8 @@ bump2version
 wheel
 watchdog
 flake8
-tox
 coverage
 twine
-Click
 pytest
 pytest-runner
 pytest-datadir
