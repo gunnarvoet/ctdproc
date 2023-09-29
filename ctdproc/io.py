@@ -24,7 +24,7 @@ def add_default_proc_params(ds):
     ds.attrs["verbose"] = 1
     ds.attrs["bounds_p"] = [0.0, 6200.0]
     ds.attrs["bounds_t"] = [-2.0, 40.0]
-    ds.attrs["bounds_c"] = [2.5, 6.0]
+    ds.attrs["bounds_c"] = [2.0, 6.0]
     ds.attrs["bounds_s"] = [20, 38]
     ds.attrs["spike_thresh_t"] = 0.5
     ds.attrs["spike_thresh_s"] = 0.1
