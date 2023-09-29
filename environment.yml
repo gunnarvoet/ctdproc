@@ -1,14 +1,6 @@
 name: ctdproc
 dependencies:
   - python=3.8
-  - ipykernel
-  - ipython
-  - ipython_genutils
-  - ipywidgets
-  - jupyter
-  - jupyter_nbextensions_configurator
-  - jupyter_contrib_nbextensions
-  - black
   - pip
   - pip:
     - -r requirements.txt

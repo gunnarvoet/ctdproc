@@ -33,8 +33,6 @@ setup(
             "pytest>=3.8",
             "coverage>=4.5",
             "pytest-cov>=2.6",
-            "tox>=3.3",
-            "codecov>=2.0",
         ],
     },
     # Packaging

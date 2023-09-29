@@ -43,6 +43,7 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 * Rename some functions to be more self-explanatory. (:pull:`20`)
 * Clean up variable names
+* Remove unnecessary packages in conda development environment definition `environment.yml`. (:pull:`21`)
 
 
 0.1.5 (2021-10-10)
