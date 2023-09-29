@@ -5,3 +5,4 @@ dependencies:
   - pip:
     - -r requirements.txt
     - -r requirements_dev.txt
+    - -e .
