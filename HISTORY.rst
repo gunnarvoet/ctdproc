@@ -31,6 +31,7 @@ Breaking Changes
 ~~~~~~~~~~~~~~~~
 * Change the class name for the conversion from hex data. (:pull:`20`)
 * Remove `z` dimension for binned casts. (:pull:`20`)
+* Change allowed conductivity range from `[2.5, 6.0]` to `[2.0, 6.0]` to allow for Arctic surface waters to be processed. (:pull:`34`)
 
 Bug Fixes
 ~~~~~~~~~
@@ -43,6 +44,7 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 * Rename some functions to be more self-explanatory. (:pull:`20`)
 * Clean up variable names
+* Remove unnecessary packages in conda development environment definition `environment.yml`. (:pull:`33`)
 
 
 0.1.5 (2021-10-10)
