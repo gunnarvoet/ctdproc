@@ -31,7 +31,7 @@ Breaking Changes
 ~~~~~~~~~~~~~~~~
 * Change the class name for the conversion from hex data. (:pull:`20`)
 * Remove `z` dimension for binned casts. (:pull:`20`)
-* Change allowed conductivity range from `[2.5, 6.0]` to `[2.0, 6.0]` to allow for Arctic surface waters to be processed. (:pull:`xx`)
+* Change allowed conductivity range from `[2.5, 6.0]` to `[2.0, 6.0]` to allow for Arctic surface waters to be processed. (:pull:`34`)
 
 Bug Fixes
 ~~~~~~~~~
