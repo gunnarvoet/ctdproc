@@ -728,7 +728,7 @@ def bincast(ds, dz, zmin, zmax):
     for vari in varnames:
         out[vari].attrs = ds[vari].attrs
     out["depth"].attrs = {
-        "long_name": "Depth",
+        "long_name": "depth",
         "units": "m",
         "standard_name": "depth",
         "positive": "down",

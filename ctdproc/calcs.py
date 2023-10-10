@@ -59,7 +59,7 @@ def calc_sal(data):
         ("time",),
         SA1.data,
         {
-            "long_name": "Absolute salinity",
+            "long_name": "absolute salinity",
             "units": "g kg-1",
             "standard_name": "sea_water_absolute_salinity",
         },
@@ -68,7 +68,7 @@ def calc_sal(data):
         ("time",),
         SA2.data,
         {
-            "long_name": "Absolute salinity",
+            "long_name": "absolute salinity",
             "units": "g kg-1",
             "standard_name": "sea_water_absolute_salinity",
         },
@@ -79,7 +79,7 @@ def calc_sal(data):
         ("time",),
         SP1.data,
         {
-            "long_name": "Practical salinity",
+            "long_name": "practical salinity",
             "units": "",
             "standard_name": "sea_water_practical_salinity",
         },
@@ -88,7 +88,7 @@ def calc_sal(data):
         ("time",),
         SP2.data,
         {
-            "long_name": "Practical salinity",
+            "long_name": "practical salinity",
             "units": "",
             "standard_name": "sea_water_practical_salinity",
         },
@@ -106,7 +106,7 @@ def calc_temp(data):
                 data["s{:s}".format(si)], data["t{:s}".format(si)], data.p
             ).data,
             {
-                "long_name": "Conservative temperature",
+                "long_name": "conservative temperature",
                 "units": "degree_C",
                 "standard_name": "sea_water_conservative_temperature",
             },
@@ -123,7 +123,7 @@ def calc_temp(data):
                 p_ref=0,
             ).data,
             {
-                "long_name": "Potential temperature",
+                "long_name": "potential temperature",
                 "units": "degree_C",
                 "standard_name": "sea_water_potential_temperature",
             },
@@ -142,7 +142,7 @@ def calc_sigma(data):
                 data["CT{:s}".format(si)],
             ).data,
             {
-                "long_name": "Potential density anomaly",
+                "long_name": "potential density anomaly",
                 "units": "kg m-3",
                 "standard_name": "sea_water_sigma_theta",
                 "reference_pressure": "0 dbar",
@@ -157,7 +157,7 @@ def calc_depth(data):
         ("time",),
         -1 * gsw.z_from_p(data.p, data.lat).data,
         {
-            "long_name": "Depth",
+            "long_name": "depth",
             "units": "m",
             "standard_name": "depth",
             "positive": "down",

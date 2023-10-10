@@ -57,63 +57,63 @@ class CTDHex(object):
         self._map_attrs = dict(
             lon=dict(
                 name="",
-                long_name="Longitude",
+                long_name="longitude",
                 standard_name="longitude",
                 units="degree_east",
             ),
             lat=dict(
                 name="",
-                long_name="Latitude",
+                long_name="latitude",
                 standard_name="latitude",
                 units="degree_north",
             ),
             t1=dict(
                 name="TemperatureSensor1",
-                long_name="Temperature",
+                long_name="temperature",
                 standard_name="sea_water_temperature",
                 units="degree_C",
             ),
             t2=dict(
                 name="TemperatureSensor2",
-                long_name="Temperature",
+                long_name="temperature",
                 standard_name="sea_water_temperature",
                 units="degree_C",
             ),
             c1=dict(
                 name="ConductivitySensor1",
-                long_name="Conductivity",
+                long_name="conductivity",
                 standard_name="sea_water_conductivity",
                 units="mS cm-1",
             ),
             c2=dict(
                 name="ConductivitySensor2",
-                long_name="Conductivity",
+                long_name="conductivity",
                 standard_name="sea_water_conductivity",
                 units="mS cm-1",
             ),
             p=dict(
                 name="PressureSensor",
-                long_name="Pressure",
+                long_name="pressure",
                 standard_name="sea_water_pressure",
                 units="dbar",
                 positive="down",
             ),
             oxygen=dict(
                 name="OxygenSensor",
-                long_name="Oxygen",
+                long_name="oxygen",
                 standard_name="mass_concentration_of_oxygen_in_sea_water",
                 units="mg l-1",
             ),
             alt=dict(
                 name="AltimeterSensor",
-                long_name="Height above bottom",
+                long_name="height above bottom",
                 standard_name="height_above_sea_floor",
                 units="m",
             ),
             spar=dict(name="SPAR_Sensor", long_name="SPAR"),
-            fl=dict(name="FluoroSeapointSensor", long_name="Fluorescence"),
+            fl=dict(name="FluoroSeapointSensor", long_name="fluorescence"),
             par=dict(name="PAR_BiosphericalLicorChelseaSensor", long_name="PAR"),
-            trans=dict(name="WET_LabsCStar", long_name="Transmissivity"),
+            trans=dict(name="WET_LabsCStar", long_name="transmissivity"),
             modcount=dict(name="modcount"),
         )
 
@@ -698,14 +698,10 @@ class CTDHex(object):
             coords={
                 "time": (
                     ["time"],
-                    # Convert to seconds since 1970-01-01
-                    # NOTE: self.data["time"] is in microseconds
-                    (self.data["time"] - np.datetime64("1970-01-01")).astype(float)
-                    / 1e6,
+                    self.data["time"],
                     {
-                        "long_name": "Time",
+                        "long_name": "time",
                         "standard_name": "time",
-                        "units": "seconds since 1970-01-01",
                     },
                 )
             },
