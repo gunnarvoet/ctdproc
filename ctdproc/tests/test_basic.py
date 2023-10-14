@@ -1,7 +1,7 @@
 import pathlib
 
 import xarray as xr
-
+import numpy as np
 import ctdproc as ctd
 
 
@@ -37,3 +37,24 @@ def test_read_lajit(rootdir, tmpdir):
 
     cx = c.to_xarray()
     assert type(cx) == xr.core.dataset.Dataset
+
+
+def test_read_ar73(rootdir):
+    """Read test data from cruise AR73."""
+    hexfile = rootdir / "data/ar73_dt001.hex"
+    assert type(hexfile) == pathlib.PosixPath
+    print(hexfile)
+    assert hexfile.exists()
+    c = ctd.io.CTDHex(hexfile)
+    _check_modcount_errors(c.data.modcount)
+
+    cx = c.to_xarray()
+    assert type(cx) == xr.core.dataset.Dataset
+
+
+def _check_modcount_errors(modcount):
+    """Check for modcount errors."""
+    dmc = np.diff(modcount)
+    mmc = np.mod(dmc, 256)
+    fmc = np.squeeze(np.where(mmc - 1))
+    assert len(fmc) == 0
