@@ -294,7 +294,7 @@ def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False)
             ]
         elif strip_microseconds:
             tt = [datetime.datetime.replace(tval, microsecond=0) for tval in tt]
-        tt = [np.datetime64(ti) for ti in tt]
+        tt = [np.datetime64(ti, "ns") for ti in tt]
         xi = np.where(nonan)[0]
         for i, ii in enumerate(xi):
             t1[ii] = tt[i]

@@ -40,6 +40,7 @@ Bug Fixes
 * Fix byte offset for reading hex file on R/V Armstrong (cruise AR73 May 2023). (:pull:`26`)
 * Fix bug in `ctdproc.proc.remove_out_of_bounds()` for python > 3.8. (:pull:`29`)
   By `Øyvind Lundesgaard <https://github.com/oyvlun>`_.
+* Fix hex reading bug introduced in PR26. (:pull:`43`)
 
 
 .. Documentation

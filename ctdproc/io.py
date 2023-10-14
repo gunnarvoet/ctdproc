@@ -120,7 +120,7 @@ class CTDHex(object):
         volt_vars = ["oxygen", "alt", "spar", "fl", "par", "trans"]
         self._mapnames_volt = {v: self._map_attrs[v] for v in volt_vars}
 
-        # extract all data and metadata and conver to physical units
+        # extract all data and metadata and convert to physical units
         self._extract_physical_data()
 
     def _extract_physical_data(self):
@@ -132,17 +132,23 @@ class CTDHex(object):
         """
         Determine location of data entries in hex file line.
 
-        Sometimes there is no SPAR sensor, in this case one hex word may
-        be missing. It lives on voltage channel 9.
+        Sometimes there is no SPAR sensor, in this case one hex word may be
+        missing. It lives on voltage channel 9. There may also be words missing
+        if less sensors are present.
 
-        Locating the right data entries also depends on the number of
-        bytes written per scan. We read this information from the
-        header.
+        Locating the right data entries also depends on the number of bytes
+        written per scan. We read this information from the header.
 
-        For details, see p.67 in manual-11pV2_018.pdf
+        This is still a bit of work in progress.
+
+        For details, see p.67/68 in manual-11pV2_018.pdf
         """
+        # Read xml config file if this has not happened yet
         if ~hasattr(self, "cfgp"):
             self.read_xml_config()
+        # Count the number of sensors in the configuration
+        n_index = self.cfgp.loc["@index"].values.shape[0]
+        # No SPAR sensor
         if (
             "14" not in self.cfgp.loc["@index"].values
             and "SPAR_Sensor" not in self.cfgp.loc["@index"].keys()
@@ -150,11 +156,15 @@ class CTDHex(object):
             self._hexoffset = -6
         else:
             self._hexoffset = 0
+        # Less voltage words can lead to a shorter data stream, see manual p. 68
         if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
             self._extra_hexoffset = 8
-        # it seems like this combination also needs an extra offset:
-        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 44:
+        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 44 and n_index == 11:
+            self._extra_hexoffset = 0
+        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 44 and n_index == 12:
             self._extra_hexoffset = 8
+        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45 and n_index == 10:
+            self._extra_hexoffset = 0
         elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45:
             self._extra_hexoffset = 8
         else:
@@ -189,6 +199,9 @@ class CTDHex(object):
                     if line[0:17] == "* Number of Bytes":
                         i = line.find("=")
                         self._bytes_per_scan = int(line[i + 2 :])
+                    if line[0:25] == "* Number of Voltage Words":
+                        i = line.find("=")
+                        self._voltage_words = int(line[i + 2 :])
                     if line[0:34] == "* Append System Time to Every Scan":
                         self._hex_has_time = True
                     else:
@@ -216,7 +229,7 @@ class CTDHex(object):
                 # spar
                 if self._hexoffset == 0:
                     tmp["spar"].append(self._hexword2spar(line[slice(57, 60)]))
-                # gps (lives in word 9 together with SPAR)
+                # NMEA data
                 lat, lon = self._hexword2lonlat(
                     line[60 + self._hexoffset : 74 + self._hexoffset]
                 )
@@ -366,15 +379,13 @@ class CTDHex(object):
         """
         Convert Seabird lon/lat data in hex format.
         Each byte is given as two hex digits.
-        Each SB freq word is 3 bytes.
-        Calculates freq from 3 byte word.
         Last two characters contain pos/neg information.
         More information on p. 43 in manual-11pV2_018.pdf
 
         Parameters
         ----------
         hex_str : str
-            6 character long hex string
+            7 byte / character long hex string
 
         Returns
         -------
