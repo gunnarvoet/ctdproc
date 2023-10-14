@@ -39,8 +39,8 @@ Quickly convert the data into an xarray_ Dataset_. From this, save to netcdf for
 
     cx = c.to_xarray()
     cx.to_netcdf('dataraw.nc', encoding={
-    "time": {"units": "seconds since 1970-01-01"},
-    })
+        "time": {"units": "seconds since 1970-01-01"},
+        })
 
 .. _xarray: http://xarray.pydata.org/en/stable/
 .. _Dataset: http://xarray.pydata.org/en/stable/data-structures.html#dataset
