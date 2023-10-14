@@ -26,7 +26,8 @@ New Features
 ~~~~~~~~~~~~
 * Move hard coded parameters to function inputs. (:pull:`20`)
 * Include parameters and processing options as attributes in data structure. (Addressing :issue:`19`, :pull:`20`)
-* Add CF standard names and units. (:pull:`25`) By `Jesse Cusack <https://github.com/jessecusack>`_.
+* Add CF standard names and units. (:pull:`25`)
+  By `Jesse Cusack <https://github.com/jessecusack>`_.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
@@ -38,7 +39,7 @@ Bug Fixes
 ~~~~~~~~~
 * Fix byte offset for reading hex file on R/V Armstrong (cruise AR73 May 2023). (:pull:`26`)
 * Fix bug in `ctdproc.proc.remove_out_of_bounds()` for python > 3.8. (:pull:`29`)
-    By `Øyvind Lundesgaard  <https://github.com/oyvlun>`_.
+  By `Øyvind Lundesgaard <https://github.com/oyvlun>`_.
 
 
 .. Documentation
