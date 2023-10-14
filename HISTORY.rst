@@ -26,6 +26,7 @@ New Features
 ~~~~~~~~~~~~
 * Move hard coded parameters to function inputs. (:pull:`20`)
 * Include parameters and processing options as attributes in data structure. (Addressing :issue:`19`, :pull:`20`)
+* Add CF standard names and units. (:pull:`25`) By `Jesse Cusack <https://github.com/jessecusack>`_.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
