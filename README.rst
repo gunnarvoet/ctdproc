@@ -30,7 +30,7 @@ Features
 
 Additional Information
 ----------------------
-Information on the Seabird hex data format saved by SBE 11 Deck Units can be found in the `manual <./misc/manual-11pV2_018.pdf>`_ on p. 65ff.
+Information on the Seabird hex data format saved by SBE 11 Deck Units can be found in the `SBE manual <./misc/manual-11pV2_018.pdf>`_ on p. 65ff.
 
 
 Credits
