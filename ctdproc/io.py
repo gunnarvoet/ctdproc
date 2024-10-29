@@ -330,7 +330,7 @@ class CTDHex(object):
                 out["spar"] = np.array(tmp["spar"])
             self.dataraw = munchify(out)
 
-    def _hexword2freq(self, hex_str):
+    def _hexword2freq_slow(self, hex_str):
         """
         Convert Seabird hex data to frequency
         each byte is given as two hex digits
@@ -354,7 +354,26 @@ class CTDHex(object):
         )
         return f
 
-    def _hexword2volt(self, hex_str):
+    def _hexword2freq(self, hex_str):
+        """
+        Convert Seabird hex data to frequency
+        each byte is given as two hex digits
+        each SB freq word is 3 bytes
+        calculates freq from 3 byte word
+
+        Parameters
+        ----------
+        hex : str
+            6 character long hex string
+
+        Returns
+        -------
+        f : float
+            frequency
+        """
+        return int(hex_str, 16) / 256
+
+    def _hexword2volt_slow(self, hex_str):
         """
         Convert Seabird hex data to voltage
         each byte is given as two hex digits
@@ -381,6 +400,28 @@ class CTDHex(object):
         v1 = 5 * (1 - v1 / 4095)
         v2 = 5 * (1 - v2 / 4095)
 
+        return v1, v2
+
+    def _hexword2volt(self, hex_str):
+        """
+        Convert Seabird hex data to voltage
+        each byte is given as two hex digits
+        each SB voltage is 1.5 words (8 MSB + 4 LSB)
+        calculates 2 voltages from 3 byte word
+
+        Parameters
+        ----------
+        hex_str : str
+            6 character long hex str
+
+        Returns
+        -------
+        v1, v2 : float
+            voltages for 2 channels
+        """
+        e = int(hex_str, 16) ^ 0xffffff
+        v1 = (e >> 12)/891
+        v2 = (e & 0xfff)/891
         return v1, v2
 
     def _hexword2lonlat(self, hex_str):
