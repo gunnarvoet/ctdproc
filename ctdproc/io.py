@@ -330,6 +330,34 @@ class CTDHex(object):
                 out["spar"] = np.array(tmp["spar"])
             self.dataraw = munchify(out)
 
+    def _hexword2freq_old(self, hex_str):
+        """
+        Convert Seabird hex data to frequency
+        each byte is given as two hex digits
+        each SB freq word is 3 bytes
+        calculates freq from 3 byte word
+
+        Parameters
+        ----------
+        hex : str
+            6 character long hex string
+
+        Returns
+        -------
+        f : float
+            frequency
+
+        Notes
+        -----
+        This is an older version that is a bit slower than the new _hexword2freq.
+        """
+        f = (
+            int(hex_str[:2], 16) * 256
+            + int(hex_str[2:4], 16)
+            + int(hex_str[4:], 16) / 256
+        )
+        return f
+
     def _hexword2freq(self, hex_str):
         """
         Convert Seabird hex data to frequency
@@ -346,13 +374,47 @@ class CTDHex(object):
         -------
         f : float
             frequency
+
+        Notes
+        -----
+        This is a new version that is a bit faster than _hexword2freq_old.
+        See https://github.com/gunnarvoet/ctdproc/issues/1#issuecomment-2439574942
+        for details.
         """
-        f = (
-            int(hex_str[:2], 16) * 256
-            + int(hex_str[2:4], 16)
-            + int(hex_str[4:], 16) / 256
-        )
-        return f
+        return int(hex_str, 16) / 256
+
+    def _hexword2volt_old(self, hex_str):
+        """
+        Convert Seabird hex data to voltage
+        each byte is given as two hex digits
+        each SB voltage is 1.5 words (8 MSB + 4 LSB)
+        calculates 2 voltages from 3 byte word
+
+        Parameters
+        ----------
+        hex_str : str
+            6 character long hex str
+
+        Returns
+        -------
+        v1, v2 : float
+            voltages for 2 channels
+
+        Notes
+        -----
+        This is an older version that is a bit slower than the new _hexword2volt.
+        """
+        byte1 = format(int(hex_str[0:2], 16), "08b")
+        byte2 = format(int(hex_str[2:4], 16), "08b")
+        byte3 = format(int(hex_str[4:6], 16), "08b")
+
+        v1 = int(byte1 + byte2[:4], 2)
+        v2 = int(byte2[4:] + byte3, 2)
+
+        v1 = 5 * (1 - v1 / 4095)
+        v2 = 5 * (1 - v2 / 4095)
+
+        return v1, v2
 
     def _hexword2volt(self, hex_str):
         """
@@ -370,17 +432,16 @@ class CTDHex(object):
         -------
         v1, v2 : float
             voltages for 2 channels
+
+        Notes
+        -----
+        This is a new version that is a bit faster than _hexword2volt_old.
+        See https://github.com/gunnarvoet/ctdproc/issues/1#issuecomment-2455907445
+        for details.
         """
-        byte1 = format(int(hex_str[0:2], 16), "08b")
-        byte2 = format(int(hex_str[2:4], 16), "08b")
-        byte3 = format(int(hex_str[4:6], 16), "08b")
-
-        v1 = int(byte1 + byte2[:4], 2)
-        v2 = int(byte2[4:] + byte3, 2)
-
-        v1 = 5 * (1 - v1 / 4095)
-        v2 = 5 * (1 - v2 / 4095)
-
+        e = int(hex_str, 16) ^ 0xffffff
+        v1 = (e >> 12)/819
+        v2 = (e & 0xfff)/819
         return v1, v2
 
     def _hexword2lonlat(self, hex_str):
