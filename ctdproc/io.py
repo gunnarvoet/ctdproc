@@ -330,7 +330,7 @@ class CTDHex(object):
                 out["spar"] = np.array(tmp["spar"])
             self.dataraw = munchify(out)
 
-    def _hexword2freq_slow(self, hex_str):
+    def _hexword2freq_old(self, hex_str):
         """
         Convert Seabird hex data to frequency
         each byte is given as two hex digits
@@ -346,6 +346,10 @@ class CTDHex(object):
         -------
         f : float
             frequency
+
+        Notes
+        -----
+        This is an older version that is a bit slower than the new _hexword2freq.
         """
         f = (
             int(hex_str[:2], 16) * 256
@@ -370,10 +374,16 @@ class CTDHex(object):
         -------
         f : float
             frequency
+
+        Notes
+        -----
+        This is a new version that is a bit faster than _hexword2freq_old.
+        See https://github.com/gunnarvoet/ctdproc/issues/1#issuecomment-2439574942
+        for details.
         """
         return int(hex_str, 16) / 256
 
-    def _hexword2volt_slow(self, hex_str):
+    def _hexword2volt_old(self, hex_str):
         """
         Convert Seabird hex data to voltage
         each byte is given as two hex digits
@@ -389,6 +399,10 @@ class CTDHex(object):
         -------
         v1, v2 : float
             voltages for 2 channels
+
+        Notes
+        -----
+        This is an older version that is a bit slower than the new _hexword2volt.
         """
         byte1 = format(int(hex_str[0:2], 16), "08b")
         byte2 = format(int(hex_str[2:4], 16), "08b")
@@ -418,6 +432,12 @@ class CTDHex(object):
         -------
         v1, v2 : float
             voltages for 2 channels
+
+        Notes
+        -----
+        This is a new version that is a bit faster than _hexword2volt_old.
+        See https://github.com/gunnarvoet/ctdproc/issues/1#issuecomment-2455907445
+        for details.
         """
         e = int(hex_str, 16) ^ 0xffffff
         v1 = (e >> 12)/819
