@@ -420,8 +420,8 @@ class CTDHex(object):
             voltages for 2 channels
         """
         e = int(hex_str, 16) ^ 0xffffff
-        v1 = (e >> 12)/891
-        v2 = (e & 0xfff)/891
+        v1 = (e >> 12)/819
+        v2 = (e & 0xfff)/819
         return v1, v2
 
     def _hexword2lonlat(self, hex_str):
