@@ -156,6 +156,12 @@ class CTDHex(object):
             self._hexoffset = -6
         else:
             self._hexoffset = 0
+        # Word 8 missing (there is probably a better way to implement this)
+        if (
+              "14" not in self.cfgp.loc["@index"].values
+              and self._bytes_per_scan == 38
+              ):
+            self._hexoffset = -12
         # Less voltage words can lead to a shorter data stream, see manual p. 68
         if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
             self._extra_hexoffset = 8
@@ -166,6 +172,8 @@ class CTDHex(object):
         elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45 and n_index == 10:
             self._extra_hexoffset = 0
         elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45:
+            self._extra_hexoffset = 8
+        elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 38:
             self._extra_hexoffset = 8
         else:
             self._extra_hexoffset = 0
@@ -495,6 +503,7 @@ class CTDHex(object):
         cfg = {}
         ti = 0
         ci = 0
+        oi = 0
         for si in sa:
             keys = list(si.keys())
             for k in keys:
@@ -505,6 +514,9 @@ class CTDHex(object):
                     elif k == "ConductivitySensor":
                         ci += 1
                         kstr = "{}{}".format(k, ci)
+                    elif k == "OxygenSensor":
+                        oi += 1
+                        kstr = "{}{}".format(k, oi)
                     else:
                         kstr = k
                     cfg[kstr] = si.copy()

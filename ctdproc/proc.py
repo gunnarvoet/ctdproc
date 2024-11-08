@@ -197,7 +197,7 @@ def despike(da, spike_threshold):
 
 def remove_out_of_bounds(da, bmin, bmax):
     """Remove out of bounds data."""
-    
+
     da = da.where((da<=bmax) & (da>=bmin))
 
     return da
@@ -276,7 +276,7 @@ def phase_correct(ds):
     df = 1 / (N * dt)
 
     # fft of each segment (row). Data are detrended, then windowed.
-    window = signal.triang(N) * np.ones((m, N))
+    window = signal.windows.triang(N) * np.ones((m, N))
     At1 = fft.fft(
         signal.detrend(np.reshape(ds.t1.data[i1:i2], newshape=(m, N))) * window
     )
@@ -462,7 +462,7 @@ def phase_correct(ds):
     dof = 2 * m  # Number of degrees of freedom (power of 2)
     df = 1 / (N * dt)  # Frequency resolution at dof degrees of freedom.
 
-    window = signal.triang(N) * np.ones((m, N))
+    window = signal.windows.triang(N) * np.ones((m, N))
     At1 = fft.fft(signal.detrend(np.reshape(t1, newshape=(m, N))) * window)
     At2 = fft.fft(signal.detrend(np.reshape(t2, newshape=(m, N))) * window)
     Ac1 = fft.fft(signal.detrend(np.reshape(c1, newshape=(m, N))) * window)
