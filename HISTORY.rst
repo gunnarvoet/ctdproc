@@ -5,9 +5,9 @@ History
 0.1.7 (unreleased)
 ------------------
 
-.. New Features
-.. ~~~~~~~~~~~~
-
+New Features
+~~~~~~~~~~~~
+* Include oxygen sensor processing.
 .. Bug Fixes
 .. ~~~~~~~~~
 
