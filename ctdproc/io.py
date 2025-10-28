@@ -10,7 +10,9 @@ import scipy.io as sio
 import xarray as xr
 import xmltodict
 from munch import Munch, munchify
+from scipy.signal import savgol_filter
 
+from .calcs import calc_allsal
 from .helpers import datetime2mtlb, mtlb2datetime
 
 
@@ -98,11 +100,11 @@ class CTDHex(object):
                 units="dbar",
                 positive="down",
             ),
-            oxygen=dict(
-                name="OxygenSensor",
+            oxygen1=dict(
+                name="OxygenSensor1",
                 long_name="oxygen",
                 standard_name="mass_concentration_of_oxygen_in_sea_water",
-                units="mg l-1",
+                units="ml/L",
             ),
             alt=dict(
                 name="AltimeterSensor",
@@ -117,7 +119,7 @@ class CTDHex(object):
             modcount=dict(name="modcount"),
         )
 
-        volt_vars = ["oxygen", "alt", "spar", "fl", "par", "trans"]
+        volt_vars = ["oxygen1", "alt", "spar", "fl", "par", "trans"]
         self._mapnames_volt = {v: self._map_attrs[v] for v in volt_vars}
 
         # extract all data and metadata and convert to physical units
@@ -653,11 +655,107 @@ class CTDHex(object):
             self.data.par = self._volt2par(
                 self.dataraw.par, self.cfgp[self._mapnames_volt["par"]["name"]].cal
             )
+        if hasattr(self.data, 'c1') and hasattr(self.data, 't1') and hasattr(self.data, 'p'):
+            if hasattr(self.data, 'lon') and hasattr(self.data, 'lat'):
+                lon, lat = self.data.lon, self.data.lat
+            else:
+                print("Warning: No position data, using default lon=0, lat=0")
+                lon, lat = 0.0, 0.0
+            SA, SP = calc_allsal(self.data.c1, self.data.t1, self.data.p, lon, lat)
+            self.data.sal = SP
+            self.data.SA = SA
+            # Ensure attributes dictionary exists
+            if not hasattr(self, '_map_attrs'):
+                self._map_attrs = {}
+            self._map_attrs["sal"] = {
+                "name": "sal",
+                "long_name": "Practical Salinity",
+                "units": "PSU",
+            }
+            self._map_attrs["SA"] = {
+                "name": "SA",
+                "long_name": "Absolute Salinity",
+                "units": "g/kg",
+            }
+        if hasattr(self.dataraw, "oxygen1"):
+            if hasattr(self.data, 'time'):
+                time = self.data.time
+            elif hasattr(self.data, 'scan'):
+                time = self.data.scan
+            else:
+                time = np.arange(len(self.dataraw.oxygen1))
+            self.data.oxygen1 = self._volt2oxygen(
+                self.dataraw.oxygen1,
+                self.data.t1,
+                self.data.sal,
+                self.data.p,
+                time,
+                self.cfgp[self._mapnames_volt["oxygen1"]["name"]].cal,
+                min_pressure=1.0
+            )
         self.data.modcount = self.dataraw.modcount
         self._check_modcount_errors(self.data.modcount)
         self.data.dtnum = self.sbetime_to_mattime(self.dataraw.time)
         self.data.time = self.mattime_to_datetime64(self.data.dtnum)
 
+    def _calculate_oxsol(self, temp, salinity):
+        """
+        Calculate oxygen solubility using Garcia and Gordon (1992).
+        Returns oxygen solubility in ml/L.
+        """
+        T_scaled = np.log((298.15 - temp) / (273.15 + temp))
+        
+        # Garcia and Gordon (1992) coefficients
+        A0 = 2.00907
+        A1 = 3.22014
+        A2 = 4.05010
+        A3 = 4.94457
+        A4 = -0.256847
+        A5 = 3.88767
+        B0 = -0.00624523
+        B1 = -0.00737614
+        B2 = -0.0103410
+        B3 = -0.00817083
+        C0 = -0.000000488682
+        
+        oxsol = np.exp(
+            A0 + A1*T_scaled + A2*T_scaled**2 + A3*T_scaled**3 + 
+            A4*T_scaled**4 + A5*T_scaled**5 +
+            salinity * (B0 + B1*T_scaled + B2*T_scaled**2 + B3*T_scaled**3) +
+            C0 * salinity**2
+        )
+        
+        return oxsol
+
+    def _calculate_tau(self, temp, pressure, cal):
+        """Calculate sensor time constant tau(T,P)."""
+        D0 = float(cal.D0)
+        D1 = float(cal.D1)
+        D2 = float(cal.D2)
+        tau20 = float(cal.Tau20)
+        
+        tau = tau20 * D0 * np.exp(D1*pressure + D2*(temp - 20))
+        return tau
+    
+    def _calculate_dvdt_window(self, volt, time_seconds, window_seconds=2.0):
+        """
+        Calculate dV/dt over a window as specified in SBE documentation.
+        If there are fewer than 2 points in the window (2s by default), dV/dt is set to zero.
+        """
+        # Convert the desired window length (in seconds) to samples
+        dt = np.mean(np.diff(time_seconds))
+        window_length = int(window_seconds / dt)
+
+        # window_length must be odd and >= polyorder + 2
+        if window_length % 2 == 0:
+            window_length += 1
+        window_length = max(window_length, 5)
+
+        # Compute the first derivative directly
+        dVdt = savgol_filter(volt, window_length=window_length, polyorder=1, deriv=1, delta=dt)
+        
+        return dVdt
+    
     def _freq2pressure(self, freq, tc, pcal):
         """Calculates pressure given frequency pressure temperature compensation
         and pressure calibration structure pcal"""
@@ -714,6 +812,65 @@ class CTDHex(object):
             / cal.CalibrationConstant
         ) + cal.Offset
         return par
+    
+    def _volt2oxygen(self, volt, temp, salinity, pressure, time, ocal, 
+                     use_tau_correction=True, min_pressure=1.0):
+        """
+        Convert oxygen voltage to ml/L using SBE43 equation.
+        
+        Parameters
+        ----------
+        use_tau_correction : bool
+            Apply tau*dV/dt correction. Default is True.
+        min_pressure : float
+            Minimum pressure (dbar) below which oxygen is set to NaN (default 1.0).
+        """
+        equation_index = int(ocal.Use2007Equation) if hasattr(ocal, 'Use2007Equation') else 1
+        cal = ocal.CalibrationCoefficients[equation_index]
+        
+        Soc = float(cal.Soc)
+        Voffset = float(cal.offset)
+        A = float(cal.A)
+        B = float(cal.B)
+        C = float(cal.C)
+        E = float(cal.E)
+        
+        # Convert time to numeric seconds
+        if hasattr(time, 'dtype') and np.issubdtype(time.dtype, np.datetime64):
+            time_seconds = (time - time[0]) / np.timedelta64(1, 's')
+        elif hasattr(time, 'dtype') and np.issubdtype(time.dtype, np.timedelta64):
+            time_seconds = time / np.timedelta64(1, 's')
+        else:
+            time_seconds = np.asarray(time, dtype=float)
+        
+        # Calculate tau*dV/dt correction if requested (for moorings)
+        if use_tau_correction:
+            dVdt = self._calculate_dvdt_window(volt, time_seconds, window_seconds=2.0)
+            tau = self._calculate_tau(temp, pressure, cal)
+            tau_correction = tau * dVdt
+        else:
+            print("  Skipping tau*dV/dt correction...")
+            tau_correction = 0.0
+        
+        # Calculate oxygen solubility
+        oxsol = self._calculate_oxsol(temp, salinity)
+        
+        # Convert temperature to Kelvin
+        K = temp + 273.15
+        
+        # SBE43 equation
+        oxygen = Soc * (volt + Voffset + tau_correction) * \
+                 oxsol * \
+                 (1.0 + A*temp + B*temp**2 + C*temp**3) * \
+                 np.exp(E * pressure / K)
+        
+        # Quality control
+        oxygen = np.where(pressure < min_pressure, np.nan, oxygen)
+        oxygen = np.where(salinity < 1.0, np.nan, oxygen)
+        oxygen = np.where(oxygen < 0, np.nan, oxygen)
+        oxygen = np.where(oxygen > 15, np.nan, oxygen)
+        
+        return oxygen
 
     def _check_modcount_errors(self, modcount):
         """Check for modcount errors."""
