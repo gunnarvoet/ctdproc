@@ -2,12 +2,12 @@
 History
 =======
 
-0.1.7 (unreleased)
-------------------
+.. 0.1.7 (unreleased)
+.. ------------------
 
-New Features
-~~~~~~~~~~~~
-* Include oxygen sensor processing.
+.. New Features
+.. ~~~~~~~~~~~~
+
 .. Bug Fixes
 .. ~~~~~~~~~
 
@@ -24,6 +24,8 @@ New Features
 
 New Features
 ~~~~~~~~~~~~
+* Include oxygen sensor processing. (:pull:`49`)
+  By `Alex Roberts <https://github.com/A-J-Roberts>`_.
 * Move hard coded parameters to function inputs. (:pull:`20`)
 * Include parameters and processing options as attributes in data structure. (Addressing :issue:`19`, :pull:`20`)
 * Add CF standard names and units. (:pull:`25`)
