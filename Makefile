@@ -42,34 +42,28 @@ clean-pyc: ## remove Python file artifacts
 	find . -name '__pycache__' -exec rm -fr {} +
 
 clean-test: ## remove test and coverage artifacts
-	rm -f .coverage
-	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
-style: ## style code using isort & black, then check style using flake8
-	isort ctdproc/
-	black ctdproc
-	flake8 --config=setup.cfg ctdproc 
+format: ## style code using isort & black, then check style using flake8
+	uv run ruff format src/ctdproc/
+	uv run ruff format tests/
 
-style-check: ## check code style using isort & black, then check style using flake8
-	isort -c -rc ctdproc/
-	black --check ctdproc
-	flake8 --config=setup.cfg ctdproc
+format-check: ## check code style using isort & black, then check style using flake8
+	uv run ruff format --diff src/ctdproc/
+	uv run ruff format --diff tests/
+
+check:
+	uv run ruff check src/ctdproc/
+	uv run ruff check tests/
 
 test: ## run tests quickly with the default Python
-	pytest
-
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source ctdproc -m pytest
-	coverage report -m
-	coverage html
-	$(BROWSER) htmlcov/index.html
+	uv run pytest
 
 docs: ## generate Sphinx HTML documentation, including API docs
 	rm -f docs/ctdproc.rst
 	rm -f docs/modules.rst
 	rm -rf docs/source
-	sphinx-apidoc -o docs/source/ ctdproc
+	sphinx-apidoc -o docs/source/ src/ctdproc
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	$(BROWSER) docs/_build/html/index.html
@@ -77,13 +71,5 @@ docs: ## generate Sphinx HTML documentation, including API docs
 servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
-release: dist ## package and upload a release
-	twine upload dist/*
-
 dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
-	ls -l dist
-
-install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+	uv build

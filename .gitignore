@@ -3,3 +3,6 @@ ctdproc.egg-info/
 docs/_build/
 notebooks/.ipynb_checkpoints
 __pycache__
+build/
+.venv/
+uv.lock

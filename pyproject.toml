@@ -1,0 +1,74 @@
+[project]
+name = "ctdproc"
+version = "0.2.0"
+description = "CTD data processing"
+readme = "README.rst"
+authors = [ { name = "Gunnar Voet", email = "gvoet@ucsd.edu" }, ]
+license = "MIT"
+license-files = ["LICENSE", ]
+requires-python = ">=3.9"
+dependencies = [
+    "gsw>=3.6.20",
+    "matplotlib>=3.9.4",
+    "munch>=4.0.0",
+    "netcdf4>=1.7.2",
+    "numpy>=2.0.2",
+    "pandas>=2.3.3",
+    "scipy>=1.13.1",
+    "xarray>=2024.7.0",
+    "xmltodict>=1.0.2",
+]
+classifiers=[
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    ]
+
+[project.urls]
+"Homepage" = "https://github.com/gunnarvoet/ctdproc"
+"Documentation" = "https://ctdproc.readthedocs.io"
+"Changelog" = "https://github.com/gunnarvoet/ctdproc/blob/main/HISTORY.rst"
+"Bug Tracker" = "https://github.com/gunnarvoet/ctdproc/issues"
+
+[build-system]
+requires = ["uv_build>=0.8.22,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "ruff>=0.14.2",
+    "sphinx>=7.4.7",
+    "sphinx-issues>=5.0.1",
+    "sphinx-rtd-theme>=3.0.2",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = [
+    "--strict-markers", # Warn about undeclared markers
+    "--import-mode=importlib", # Recommended for modern projects
+]
+testpaths = [
+    "tests", # Directory where your tests are located
+]
+norecursedirs = [
+    ".git",
+    ".venv",
+    "dist",
+    "build",
+    "__pycache__"
+]
+xfail_strict = true
+
+[tool.ruff]
+exclude = [".venv"]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true

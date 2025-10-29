@@ -2,7 +2,7 @@
 History
 =======
 
-.. 0.1.7 (unreleased)
+.. 0.2.1 (unreleased)
 .. ------------------
 
 .. New Features
@@ -19,7 +19,7 @@ History
 
 
 
-0.1.6 (unreleased)
+0.2.0 (2025-11-10)
 ------------------
 
 New Features
@@ -68,9 +68,6 @@ New Features
 0.1.4 (2020-04-20)
 ------------------
 
-.. New Features
-.. ~~~~~~~~~~~~
-
 Bug Fixes
 ~~~~~~~~~
 * Fix bug in pressure conversion, was missing subtraction of atmospheric pressure.
@@ -81,9 +78,6 @@ Documentation
 ~~~~~~~~~~~~~
 
 * Add contributing guide. Mostly adapting `xarray's contributing guide <http://xarray.pydata.org/en/stable/contributing.html>`_ .
-
-.. Internal Changes
-.. ~~~~~~~~~~~~~~~~
 
 
 0.1.3 (2020-04-10)

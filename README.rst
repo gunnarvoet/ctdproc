@@ -10,8 +10,10 @@ ctdproc
         :target: https://ctdproc.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-        :target: https://github.com/psf/black
+.. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+        :target: https://docs.astral.sh/ruff/
+        :alt: Ruff
+
 
 
 CTD data processing in python. 
@@ -37,3 +39,8 @@ Credits
 -------
 
 This package borrows heavily from a toolbox written in MATLAB® with contributions from Jennifer MacKinnon, Shaun Johnston, Daniel Rudnick, Robert Todd and others.
+
+
+Docs
+----
+`uv run make docs` will generate the docs. 
