@@ -2,7 +2,7 @@
 History
 =======
 
-.. 0.2.1 (unreleased)
+.. 0. (unreleased)
 .. ------------------
 
 .. New Features
@@ -16,6 +16,22 @@ History
 
 .. Internal Changes
 .. ~~~~~~~~~~~~~~~~
+
+
+0.2.1 (unreleased)
+------------------
+
+New Features
+~~~~~~~~~~~~
+
+Bug Fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
 
 
 

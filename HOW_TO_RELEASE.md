@@ -54,7 +54,7 @@ Copied and adjusted from xarray and mixsea.
         --token YOUR_TESTPYPI_TOKEN
      ```
     You will need to be listed as a package owner at
-    https://test.pypi.python.org/pypi/ctdproc for this to work.
+    https://test.pypi.org/pypi/ctdproc for this to work.
 
     Alternatively, the url for test.pypi.org is also listed in `pyproject.toml`
     and can be used as:
@@ -119,7 +119,7 @@ Copied and adjusted from xarray and mixsea.
       ```
     You're done pushing to main!
 16. Issue the release on GitHub. Click on "Draft a new release" at
-    https://github.com/gunnarvot/ctdproc/releases. Type in the version number, but
+    https://github.com/gunnarvoet/ctdproc/releases. Type in the version number, but
     don't bother to describe it -- we maintain that on the docs instead.
 17. Update the docs. Login to https://readthedocs.org/projects/ctdproc/versions/
     and switch your new release tag (at the bottom) from "Inactive" to "Active".
