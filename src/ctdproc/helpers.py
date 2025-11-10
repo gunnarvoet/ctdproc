@@ -123,9 +123,11 @@ def interpbadsegments(x, ibad):
         i2 = range(iia, iis + 1)
         i3 = iis + 1
         if i1 < 0:
-            start_end_warning("start")
+            # start_end_warning("start")
+            pass
         elif i3 > x.size:
-            start_end_warning("end")
+            # start_end_warning("end")
+            pass
         else:
             y[i2] = interp1d(np.array([i1, i3]), x[[i1, i3]])(i2)
     return y
