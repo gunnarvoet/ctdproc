@@ -198,7 +198,7 @@ def despike(da, spike_threshold):
 def remove_out_of_bounds(da, bmin, bmax):
     """Remove out of bounds data."""
 
-    da = da.where((da<=bmax) & (da>=bmin))
+    da = da.where((da <= bmax) & (da >= bmin))
 
     return da
 

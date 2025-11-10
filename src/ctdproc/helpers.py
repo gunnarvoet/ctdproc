@@ -230,7 +230,7 @@ def preen(x, xmin, xmax):
 
 def atanfit(x, f, Phi, W):
     f = np.arctan(2 * np.pi * f * x[0]) + 2 * np.pi * f * x[1] + Phi
-    f = np.matmul(np.matmul(f.transpose(), W ** 4), f)
+    f = np.matmul(np.matmul(f.transpose(), W**4), f)
     return f
 
 

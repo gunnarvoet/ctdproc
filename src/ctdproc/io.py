@@ -159,19 +159,28 @@ class CTDHex(object):
         else:
             self._hexoffset = 0
         # Word 8 missing (there is probably a better way to implement this)
-        if (
-              "14" not in self.cfgp.loc["@index"].values
-              and self._bytes_per_scan == 38
-              ):
+        if "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 38:
             self._hexoffset = -12
         # Less voltage words can lead to a shorter data stream, see manual p. 68
         if "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 48:
             self._extra_hexoffset = 8
-        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 44 and n_index == 11:
+        elif (
+            "14" in self.cfgp.loc["@index"].values
+            and self._bytes_per_scan == 44
+            and n_index == 11
+        ):
             self._extra_hexoffset = 0
-        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 44 and n_index == 12:
+        elif (
+            "14" in self.cfgp.loc["@index"].values
+            and self._bytes_per_scan == 44
+            and n_index == 12
+        ):
             self._extra_hexoffset = 8
-        elif "14" in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45 and n_index == 10:
+        elif (
+            "14" in self.cfgp.loc["@index"].values
+            and self._bytes_per_scan == 45
+            and n_index == 10
+        ):
             self._extra_hexoffset = 0
         elif "14" not in self.cfgp.loc["@index"].values and self._bytes_per_scan == 45:
             self._extra_hexoffset = 8
@@ -260,9 +269,7 @@ class CTDHex(object):
                 tmp["modcount"].append(
                     int(
                         line[
-                            78
-                            + self._hexoffset
-                            + self._extra_hexoffset : 80
+                            78 + self._hexoffset + self._extra_hexoffset : 80
                             + self._hexoffset
                             + self._extra_hexoffset
                         ],
@@ -274,30 +281,22 @@ class CTDHex(object):
                     tmp["time"].append(
                         int(
                             line[
-                                86
-                                + self._hexoffset
-                                + self._extra_hexoffset : 88
+                                86 + self._hexoffset + self._extra_hexoffset : 88
                                 + self._hexoffset
                                 + self._extra_hexoffset
                             ]
                             + line[
-                                84
-                                + self._hexoffset
-                                + self._extra_hexoffset : 86
+                                84 + self._hexoffset + self._extra_hexoffset : 86
                                 + self._hexoffset
                                 + self._extra_hexoffset
                             ]
                             + line[
-                                82
-                                + self._hexoffset
-                                + self._extra_hexoffset : 84
+                                82 + self._hexoffset + self._extra_hexoffset : 84
                                 + self._hexoffset
                                 + self._extra_hexoffset
                             ]
                             + line[
-                                80
-                                + self._hexoffset
-                                + self._extra_hexoffset : 82
+                                80 + self._hexoffset + self._extra_hexoffset : 82
                                 + self._hexoffset
                                 + self._extra_hexoffset
                             ],
@@ -441,9 +440,9 @@ class CTDHex(object):
         See https://github.com/gunnarvoet/ctdproc/issues/1#issuecomment-2455907445
         for details.
         """
-        e = int(hex_str, 16) ^ 0xffffff
-        v1 = (e >> 12)/819
-        v2 = (e & 0xfff)/819
+        e = int(hex_str, 16) ^ 0xFFFFFF
+        v1 = (e >> 12) / 819
+        v2 = (e & 0xFFF) / 819
         return v1, v2
 
     def _hexword2lonlat(self, hex_str):
@@ -655,8 +654,12 @@ class CTDHex(object):
             self.data.par = self._volt2par(
                 self.dataraw.par, self.cfgp[self._mapnames_volt["par"]["name"]].cal
             )
-        if hasattr(self.data, 'c1') and hasattr(self.data, 't1') and hasattr(self.data, 'p'):
-            if hasattr(self.data, 'lon') and hasattr(self.data, 'lat'):
+        if (
+            hasattr(self.data, "c1")
+            and hasattr(self.data, "t1")
+            and hasattr(self.data, "p")
+        ):
+            if hasattr(self.data, "lon") and hasattr(self.data, "lat"):
                 lon, lat = self.data.lon, self.data.lat
             else:
                 print("Warning: No position data, using default lon=0, lat=0")
@@ -665,7 +668,7 @@ class CTDHex(object):
             self.data.sal = SP
             self.data.SA = SA
             # Ensure attributes dictionary exists
-            if not hasattr(self, '_map_attrs'):
+            if not hasattr(self, "_map_attrs"):
                 self._map_attrs = {}
             self._map_attrs["sal"] = {
                 "name": "sal",
@@ -678,9 +681,9 @@ class CTDHex(object):
                 "units": "g/kg",
             }
         if hasattr(self.dataraw, "oxygen1"):
-            if hasattr(self.data, 'time'):
+            if hasattr(self.data, "time"):
                 time = self.data.time
-            elif hasattr(self.data, 'scan'):
+            elif hasattr(self.data, "scan"):
                 time = self.data.scan
             else:
                 time = np.arange(len(self.dataraw.oxygen1))
@@ -691,7 +694,7 @@ class CTDHex(object):
                 self.data.p,
                 time,
                 self.cfgp[self._mapnames_volt["oxygen1"]["name"]].cal,
-                min_pressure=1.0
+                min_pressure=1.0,
             )
         self.data.modcount = self.dataraw.modcount
         self._check_modcount_errors(self.data.modcount)
@@ -719,10 +722,14 @@ class CTDHex(object):
         C0 = -0.000000488682
 
         oxsol = np.exp(
-            A0 + A1*T_scaled + A2*T_scaled**2 + A3*T_scaled**3 +
-            A4*T_scaled**4 + A5*T_scaled**5 +
-            salinity * (B0 + B1*T_scaled + B2*T_scaled**2 + B3*T_scaled**3) +
-            C0 * salinity**2
+            A0
+            + A1 * T_scaled
+            + A2 * T_scaled**2
+            + A3 * T_scaled**3
+            + A4 * T_scaled**4
+            + A5 * T_scaled**5
+            + salinity * (B0 + B1 * T_scaled + B2 * T_scaled**2 + B3 * T_scaled**3)
+            + C0 * salinity**2
         )
 
         return oxsol
@@ -734,7 +741,7 @@ class CTDHex(object):
         D2 = float(cal.D2)
         tau20 = float(cal.Tau20)
 
-        tau = tau20 * D0 * np.exp(D1*pressure + D2*(temp - 20))
+        tau = tau20 * D0 * np.exp(D1 * pressure + D2 * (temp - 20))
         return tau
 
     def _calculate_dvdt_window(self, volt, time_seconds, window_seconds=2.0):
@@ -752,7 +759,9 @@ class CTDHex(object):
         window_length = max(window_length, 5)
 
         # Compute the first derivative directly
-        dVdt = savgol_filter(volt, window_length=window_length, polyorder=1, deriv=1, delta=dt)
+        dVdt = savgol_filter(
+            volt, window_length=window_length, polyorder=1, deriv=1, delta=dt
+        )
 
         return dVdt
 
@@ -813,8 +822,17 @@ class CTDHex(object):
         ) + cal.Offset
         return par
 
-    def _volt2oxygen(self, volt, temp, salinity, pressure, time, ocal,
-                     use_tau_correction=True, min_pressure=1.0):
+    def _volt2oxygen(
+        self,
+        volt,
+        temp,
+        salinity,
+        pressure,
+        time,
+        ocal,
+        use_tau_correction=True,
+        min_pressure=1.0,
+    ):
         """
         Convert oxygen voltage to ml/L using SBE43 equation.
 
@@ -825,7 +843,9 @@ class CTDHex(object):
         min_pressure : float
             Minimum pressure (dbar) below which oxygen is set to NaN (default 1.0).
         """
-        equation_index = int(ocal.Use2007Equation) if hasattr(ocal, 'Use2007Equation') else 1
+        equation_index = (
+            int(ocal.Use2007Equation) if hasattr(ocal, "Use2007Equation") else 1
+        )
         cal = ocal.CalibrationCoefficients[equation_index]
 
         Soc = float(cal.Soc)
@@ -836,10 +856,10 @@ class CTDHex(object):
         E = float(cal.E)
 
         # Convert time to numeric seconds
-        if hasattr(time, 'dtype') and np.issubdtype(time.dtype, np.datetime64):
-            time_seconds = (time - time[0]) / np.timedelta64(1, 's')
-        elif hasattr(time, 'dtype') and np.issubdtype(time.dtype, np.timedelta64):
-            time_seconds = time / np.timedelta64(1, 's')
+        if hasattr(time, "dtype") and np.issubdtype(time.dtype, np.datetime64):
+            time_seconds = (time - time[0]) / np.timedelta64(1, "s")
+        elif hasattr(time, "dtype") and np.issubdtype(time.dtype, np.timedelta64):
+            time_seconds = time / np.timedelta64(1, "s")
         else:
             time_seconds = np.asarray(time, dtype=float)
 
@@ -859,10 +879,13 @@ class CTDHex(object):
         K = temp + 273.15
 
         # SBE43 equation
-        oxygen = Soc * (volt + Voffset + tau_correction) * \
-                 oxsol * \
-                 (1.0 + A*temp + B*temp**2 + C*temp**3) * \
-                 np.exp(E * pressure / K)
+        oxygen = (
+            Soc
+            * (volt + Voffset + tau_correction)
+            * oxsol
+            * (1.0 + A * temp + B * temp**2 + C * temp**3)
+            * np.exp(E * pressure / K)
+        )
 
         # Quality control
         oxygen = np.where(pressure < min_pressure, np.nan, oxygen)

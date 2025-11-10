@@ -44,15 +44,15 @@ clean-pyc: ## remove Python file artifacts
 clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
-format: ## style code using isort & black, then check style using flake8
+format: ## style code using ruff format
 	uv run ruff format src/ctdproc/
 	uv run ruff format tests/
 
-format-check: ## check code style using isort & black, then check style using flake8
+format-check: ## check code style using ruff format --diff
 	uv run ruff format --diff src/ctdproc/
 	uv run ruff format --diff tests/
 
-check:
+check: ## run ruff code checking
 	uv run ruff check src/ctdproc/
 	uv run ruff check tests/
 
