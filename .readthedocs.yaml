@@ -7,9 +7,16 @@ version: 2
 
 # Set the OS, Python version and other tools you might need
 build:
-  os: ubuntu-22.04
+  os: ubuntu-24.04
   tools:
-    python: "3.10"
+    python: "3.13"
+  # The 'build.jobs' section is for custom build steps
+  jobs:
+    pre_build:
+      # Change the current working directory to the repository root before running the build command
+      # RTD normally runs the build from the directory containing conf.py
+      # This forces the working directory to be the repo root for the whole process.
+      - cd $READTHEDOCS_REPOSITORY_PATH
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
@@ -18,7 +25,6 @@ sphinx:
 # Optionally set the version of Python and requirements required to build your docs
 python:
   install:
-    - requirements: requirements.txt
-    - requirements: requirements_dev.txt
+    - requirements: docs/requirements.txt
     - method: pip
       path: .

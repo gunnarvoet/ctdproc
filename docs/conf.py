@@ -63,7 +63,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "ctdproc"
-copyright = "2020, Gunnar Voet"
+copyright = "2025, Gunnar Voet"
 author = "Gunnar Voet"
 
 # The version info for the project you're documenting, acts as replacement
