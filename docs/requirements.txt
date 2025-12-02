@@ -20,7 +20,7 @@ docutils==0.21.2
     # via
     #   sphinx
     #   sphinx-rtd-theme
-fonttools==4.60.1
+fonttools==4.61.0
     # via matplotlib
 gsw==3.6.20
     # via ctdproc (pyproject.toml)
