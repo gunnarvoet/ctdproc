@@ -1,8 +1,11 @@
 .DS_Store
 ctdproc.egg-info/
 docs/_build/
+docs/generated/
 notebooks/.ipynb_checkpoints
 __pycache__
 build/
 .venv/
 uv.lock
+plans/
+.claude/

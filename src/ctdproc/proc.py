@@ -8,6 +8,21 @@ from scipy import fft, optimize, signal, stats
 
 from . import calcs, helpers
 
+__all__ = [
+    "run_all",
+    "cleanup",
+    "cleanup_ud",
+    "split_updn",
+    "phase_correct",
+    "rmloops",
+    "bincast",
+    "wsink",
+    "despike",
+    "remove_out_of_bounds",
+    "preen_ctd",
+    "add_tcfit_default",
+]
+
 # We are running into trouble if the default backend is not installed
 # in the current python environment. Try to import pyplot the default
 # way first. If this fails, set backend to agg which should always work.
@@ -22,17 +37,26 @@ def run_all(ds):
     """
     Run all standard processing steps on raw CTD time series.
 
+    Applies, in order: :func:`cleanup`, :func:`split_updn`,
+    :func:`add_tcfit_default`, :func:`phase_correct`,
+    :func:`ctdproc.calcs.swcalcs`, :func:`rmloops`, and
+    :func:`cleanup_ud` to each of the down- and up-cast.
+
     Parameters
     ----------
-    data : xarray.Dataset
-            CTD time series data structure
+    ds : xarray.Dataset
+        Raw CTD time series with default processing parameters in
+        ``ds.attrs`` (see :func:`ctdproc.io.add_default_proc_params`).
 
     Returns
     -------
-    datad : xarray.Dataset
-            Downcast time series
-    datau : xarray.Dataset
-            Upcast time series
+    dict of xarray.Dataset
+        Mapping with keys ``"down"`` and ``"up"`` containing the
+        processed downcast and upcast time series.
+
+    See Also
+    --------
+    bincast : depth-bin the result of this function.
     """
     ds = cleanup(ds)
 
@@ -50,36 +74,20 @@ def run_all(ds):
     return ds_updown
 
 
-def plot_profile(ds, var_list):
-    for i, v in enumerate(var_list, start=1):
-        plt.subplot(1, len(var_list), i)
-        if "time" in ds.dims:
-            ds[v].plot(x="time")
-        elif "depth" in ds.dims:
-            ds[v].plot(y="depth")
-
-
-def plot_TS(ds):
-    plt.plot(ds["t1"], ds["s1"], alpha=0.1)
-    plt.plot(ds["t2"], ds["s2"], alpha=0.1)
-
-
 def add_tcfit_default(ds):
     """
-    Get default values for tc fit range depending on depth of cast.
+    Set the default pressure range used for the t/c phase fit.
 
-    Range for tc fit is 200dbar to maximum pressure if the cast is
-    shallower than 1000dbar, 500dbar to max pressure otherwise.
+    The range is chosen by maximum cast pressure: 500 dbar to max for
+    casts deeper than 1000 dbar, 200 dbar to max for casts deeper than
+    300 dbar, 50 dbar to max otherwise. The result is stored in
+    ``ds.attrs["tcfit"]``; nothing is returned.
 
     Parameters
     ----------
     ds : xarray.Dataset
-            CTD time series data structure
-
-    Returns
-    -------
-    tcfit : tuple
-            Upper and lower limit for tc fit in phase_correct.
+        CTD time series. Must contain pressure variable ``p``. Modified
+        in place.
     """
     if ds.p.max() > 1000:
         tcfit = [500, ds.p.max().data]
@@ -94,10 +102,21 @@ def cleanup(ds):
     """
     Clean up CTD raw time series.
 
-    - despike pressure
-    - eliminate data near surface
-    - remove spikes in other data
-    - remove smaller T, C, glitches
+    Despikes pressure, trims near-surface data, removes spikes in
+    temperature exceeding ``spike_thresh_t``, removes out-of-range values
+    (see :func:`preen_ctd`), and drops a leading run of NaN conductivity.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Raw CTD time series. Required attrs: ``diff_p``, ``prod_p``,
+        ``spike_thresh_t``, plus the per-variable bounds used by
+        :func:`preen_ctd`.
+
+    Returns
+    -------
+    ds : xarray.Dataset
+        Cleaned time series.
     """
 
     # despike pressure
@@ -143,7 +162,28 @@ def cleanup(ds):
 
 
 def cleanup_ud(ds):
-    """More cleaning and calculation of derived variables."""
+    """
+    Clean a single down- or up-cast and calculate derived variables.
+
+    Despikes ``t1``/``t2``, glitch-corrects ``c1``/``c2``/``t1``/``t2``,
+    computes salinity (practical and absolute) via
+    :func:`ctdproc.calcs.calc_sal`, despikes/glitch-corrects the salinity
+    fields, and finally calls :func:`ctdproc.calcs.calc_temp` and
+    :func:`ctdproc.calcs.calc_sigma` to add conservative/potential
+    temperature and potential density anomaly.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        CTD time series for a single cast (down or up). Required attrs:
+        ``spike_thresh_t``, ``spike_thresh_s``, ``diff_t``/``prod_t``,
+        ``diff_c``/``prod_c``, ``diff_s``/``prod_s``, ``bounds_s``.
+
+    Returns
+    -------
+    ds : xarray.Dataset
+        Cleaned cast with derived salinity, temperature and density fields.
+    """
 
     # remove spikes in temperature
     for v in ["t1", "t2"]:
@@ -182,7 +222,22 @@ def cleanup_ud(ds):
 
 
 def despike(da, spike_threshold):
-    """Set spikes to NaN."""
+    """
+    Set spikes to NaN where the absolute first difference exceeds a threshold.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        Input data. Modified in place.
+    spike_threshold : float
+        Maximum absolute difference between consecutive samples; samples
+        whose preceding difference exceeds this value are set to NaN.
+
+    Returns
+    -------
+    da : xarray.DataArray
+        The input data with spikes replaced by NaN.
+    """
     absdiff = np.absolute(np.diff(da.data))
     # Using np.greater instead of the > operator as we can use the where option
     # and avoid the warning when nans are compared to a number. It broadcasts
@@ -196,7 +251,23 @@ def despike(da, spike_threshold):
 
 
 def remove_out_of_bounds(da, bmin, bmax):
-    """Remove out of bounds data."""
+    """
+    Replace out-of-bounds values with NaN.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        Input data.
+    bmin : float
+        Lower bound (inclusive).
+    bmax : float
+        Upper bound (inclusive).
+
+    Returns
+    -------
+    xarray.DataArray
+        Input with values outside ``[bmin, bmax]`` replaced by NaN.
+    """
 
     da = da.where((da <= bmax) & (da >= bmin))
 
@@ -204,17 +275,23 @@ def remove_out_of_bounds(da, bmin, bmax):
 
 
 def preen_ctd(ds):
-    """Remove spikes in p, t1, t2, c1, c2.
+    """
+    Replace out-of-range values in ``p``, ``t1``, ``t2``, ``c1``, ``c2``.
+
+    Each variable is filtered against the per-channel bounds stored in
+    ``ds.attrs["bounds_p"]``, ``ds.attrs["bounds_t"]``, and
+    ``ds.attrs["bounds_c"]``; out-of-range samples are replaced by linear
+    interpolation between adjacent in-range samples.
 
     Parameters
     ----------
-    data : xarray.Dataset
-            Dataset with CTD time series.
+    ds : xarray.Dataset
+        Dataset with CTD time series.
 
     Returns
     -------
-    data : xarray.Dataset
-            Cleaned dataset.
+    ds : xarray.Dataset
+        Dataset with each channel cleaned and reinterpolated.
     """
     for v in ["p", "t1", "t2", "c1", "c2"]:
         ds[v] = ds[v].where(
@@ -230,17 +307,28 @@ def preen_ctd(ds):
 
 def phase_correct(ds):
     """
-    Bring temperature and conductivity in phase.
+    Bring temperature and conductivity into phase via FFT-based fit.
+
+    Estimates the thermistor time constant ``tau`` and the t/c sensor lag
+    ``L`` for each (temperature, conductivity) pair by fitting an arctan
+    model to the cross-spectral phase, then applies the correction in the
+    frequency domain. Operates over the pressure range stored in
+    ``ds.attrs["tcfit"]`` (see :func:`add_tcfit_default`). This is the
+    most expensive step in :func:`run_all` and is critical for accurate
+    salinity.
 
     Parameters
     ----------
-    ds : dtype
-            description
+    ds : xarray.Dataset
+        CTD time series for a single cast (down or up). Required attrs:
+        ``tcfit``; optional ``plot_spectra`` and ``plot_path`` for
+        diagnostic output.
 
     Returns
     -------
-    ds : dtype
-            description
+    ds : xarray.Dataset
+        Time series with ``t1``, ``t2``, ``c1``, ``c2`` replaced by their
+        phase-corrected, low-pass-filtered counterparts.
     """
 
     # remove spikes
@@ -320,12 +408,8 @@ def phase_correct(ds):
     W1 = np.diag(Coht1c1)
     W2 = np.diag(Coht2c2)
 
-    x1 = optimize.fmin(
-        func=helpers.atanfit, x0=[0, 0], args=(f, Phit1c1, W1), disp=False
-    )
-    x2 = optimize.fmin(
-        func=helpers.atanfit, x0=[0, 0], args=(f, Phit2c2, W2), disp=False
-    )
+    x1 = optimize.fmin(func=_atanfit, x0=[0, 0], args=(f, Phit1c1, W1), disp=False)
+    x2 = optimize.fmin(func=_atanfit, x0=[0, 0], args=(f, Phit2c2, W2), disp=False)
 
     tau1 = x1[0]
     tau2 = x2[0]
@@ -609,7 +693,7 @@ def rmloops(ds):
 
     tsmooth = 0.25  # seconds
     fs = 24  # Hz
-    w = calcs.wsink(ds.p.data, tsmooth, fs)  # down/up +/-ve
+    w = wsink(ds.p.data, tsmooth, fs)  # down/up +/-ve
     iloop = np.array([])
 
     # up or downcast?
@@ -734,24 +818,18 @@ def bincast(ds, dz, zmin, zmax):
 
 def split_updn(ds):
     """
-    Separate into down/up-casts and apply corrections.
-
-    ## TODO: (should this really be here?)
-    - tc lag correction
-    - thermal mass correction
-    - lowpass-filter T, C, oxygen
+    Split a cast into downcast and upcast at the pressure maximum.
 
     Parameters
     ----------
-    data : xarray.Dataset
-            CTD time series
+    ds : xarray.Dataset
+        CTD time series with pressure variable ``p``.
 
     Returns
     -------
-    datad : xarray.Dataset
-            CTD time series for downcast
-    datau : xarray.Dataset
-            CTD time series for upcast
+    dict of xarray.Dataset
+        Mapping with keys ``"down"`` and ``"up"`` containing the downcast
+        and upcast time series.
     """
     n = ds.p.size
     ipmax = np.argmax(ds.p.data)
@@ -760,3 +838,69 @@ def split_updn(ds):
     datau = ds.isel(time=range(ipmax, n))
 
     return {"down": datad, "up": datau}
+
+
+def wsink(p, Ts, Fs):
+    """
+    Compute sinking velocity from pressure record.
+
+    Computes the sinking (or rising) velocity from the pressure signal p
+    by first differencing. The pressure signal is smoothed with a low-pass
+    filter for differentiation. If the input signal is shorter than the
+    smoothing time scale, w is taken as the slope of the linear regression of p.
+
+    Adapted from wsink.m - Fabian Wolk, Rockland Oceanographic Services Inc.
+
+    Parameters
+    ----------
+    p : array-like
+        Pressure [dbar]
+    Ts : float
+        Smoothing time scale [s]
+    Fs : float
+        Sampling frequency [Hz]
+
+    Returns
+    -------
+    w : array-like
+        Sinking velocity [dbar/s]
+    """
+    FORDER = 1
+    # low pass filter coefficients
+    [b, a] = signal.butter(FORDER, 1 / Ts * 2 / Fs)
+    N = p.size
+    if N <= Fs * Ts * FORDER:
+        pol = np.polyfit(np.array(range(N)), p, 1)
+        w = pol[0] * Fs * np.ones(N)
+    else:
+        # pad the pressure vector left and right
+        nPad = int(FORDER * Ts * Fs)
+        if nPad > N:
+            print(
+                "warning: length of pressure vector is smaller than padding length.\n",
+                "Filter transients may occur.",
+            )
+        p = _pad_lr(p, nPad)
+        w = np.gradient(Fs * signal.filtfilt(b, a, p))
+        w = w[nPad:-nPad]
+
+    return w
+
+
+def _atanfit(x, f, Phi, W):
+    f = np.arctan(2 * np.pi * f * x[0]) + 2 * np.pi * f * x[1] + Phi
+    f = np.matmul(np.matmul(f.transpose(), W**4), f)
+    return f
+
+
+def _pad_lr(p, nPad):
+    """Pad array left and right."""
+    p0 = p[0]
+    p = p - p0
+    p = p0 + np.insert(p, 0, -p[nPad - 1 :: -1])
+
+    p0 = p[-1]
+    p = p - p0
+    p = p0 + np.insert(p, -1, -p[: -nPad - 1 : -1])
+
+    return p

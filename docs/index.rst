@@ -6,7 +6,7 @@
 
    installation
    usage
-   source/modules
+   api
    contributing
    authors
    history

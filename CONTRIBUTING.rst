@@ -270,8 +270,29 @@ Some other important things to know about the docs:
   will emit a warning.
 
 
+Documenting the API
+-------------------
+
+The API reference at ``docs/api.rst`` is hand-curated, not auto-generated
+from the package layout. When you add or rename a public function, two
+things have to stay in sync:
+
+- The submodule's ``__all__`` list (in ``src/ctdproc/{proc,io,calcs,helpers}.py``).
+  Internal helpers (leading underscore, or simply not exported) are
+  deliberately omitted and will not appear in the rendered docs.
+- The relevant section of ``docs/api.rst``. Pick the section that
+  matches the function's role in the pipeline (Pipeline orchestration,
+  Cleaning, Phase correction, Thermodynamic calculations, I/O,
+  Low-level utilities) rather than appending alphabetically.
+
+Every public function or method must carry a NumPy-style docstring with
+at minimum a one-line summary plus ``Parameters`` and ``Returns``
+blocks. ``sphinx.ext.intersphinx`` resolves cross-references to
+``numpy``, ``xarray``, and ``gsw`` automatically, so referring to
+``xarray.Dataset`` in a docstring will render as a link.
+
 Building the documentation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Navigate to your root ``ctdproc/`` directory in the console and run::
 
