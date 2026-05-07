@@ -26,6 +26,7 @@ New Features
 
 Bug Fixes
 ~~~~~~~~~
+* Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)
 
 Documentation
 ~~~~~~~~~~~~~

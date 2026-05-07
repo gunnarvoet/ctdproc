@@ -278,16 +278,16 @@ def phase_correct(ds):
     # fft of each segment (row). Data are detrended, then windowed.
     window = signal.windows.triang(N) * np.ones((m, N))
     At1 = fft.fft(
-        signal.detrend(np.reshape(ds.t1.data[i1:i2], newshape=(m, N))) * window
+        signal.detrend(np.reshape(ds.t1.data[i1:i2], shape=(m, N))) * window
     )
     At2 = fft.fft(
-        signal.detrend(np.reshape(ds.t2.data[i1:i2], newshape=(m, N))) * window
+        signal.detrend(np.reshape(ds.t2.data[i1:i2], shape=(m, N))) * window
     )
     Ac1 = fft.fft(
-        signal.detrend(np.reshape(ds.c1.data[i1:i2], newshape=(m, N))) * window
+        signal.detrend(np.reshape(ds.c1.data[i1:i2], shape=(m, N))) * window
     )
     Ac2 = fft.fft(
-        signal.detrend(np.reshape(ds.c2.data[i1:i2], newshape=(m, N))) * window
+        signal.detrend(np.reshape(ds.c2.data[i1:i2], shape=(m, N))) * window
     )
 
     # Positive frequencies only
@@ -388,10 +388,10 @@ def phase_correct(ds):
     for v in vars:
         if v in ds:
             vard[v] = np.zeros((2 * m - 1, N))
-            vard[v][: 2 * m - 1 : 2, :] = np.reshape(ds[v].data[i1:i2], newshape=(m, N))
+            vard[v][: 2 * m - 1 : 2, :] = np.reshape(ds[v].data[i1:i2], shape=(m, N))
             vard[v][1::2, :] = np.reshape(
                 ds[v].data[i1 + int(N / 2) : i2 - int(N / 2)],
-                newshape=(m - 1, N),
+                shape=(m - 1, N),
             )
 
     time = ds.time[i1:i2]
@@ -432,7 +432,7 @@ def phase_correct(ds):
         if v in ds:
             Adi[v] = np.real(fft.ifft(Ad[v]))
             Adi[v] = np.squeeze(
-                np.reshape(Adi[v][:, int(N / 4) : (3 * int(N / 4))], newshape=(1, -1))
+                np.reshape(Adi[v][:, int(N / 4) : (3 * int(N / 4))], shape=(1, -1))
             )
 
     time = time[int(N / 4) : -int(N / 4)]
@@ -463,10 +463,10 @@ def phase_correct(ds):
     df = 1 / (N * dt)  # Frequency resolution at dof degrees of freedom.
 
     window = signal.windows.triang(N) * np.ones((m, N))
-    At1 = fft.fft(signal.detrend(np.reshape(t1, newshape=(m, N))) * window)
-    At2 = fft.fft(signal.detrend(np.reshape(t2, newshape=(m, N))) * window)
-    Ac1 = fft.fft(signal.detrend(np.reshape(c1, newshape=(m, N))) * window)
-    Ac2 = fft.fft(signal.detrend(np.reshape(c2, newshape=(m, N))) * window)
+    At1 = fft.fft(signal.detrend(np.reshape(t1, shape=(m, N))) * window)
+    At2 = fft.fft(signal.detrend(np.reshape(t2, shape=(m, N))) * window)
+    Ac1 = fft.fft(signal.detrend(np.reshape(c1, shape=(m, N))) * window)
+    Ac2 = fft.fft(signal.detrend(np.reshape(c2, shape=(m, N))) * window)
 
     # Positive frequencies only
     At1 = At1[:, 0 : int(N / 2)]
