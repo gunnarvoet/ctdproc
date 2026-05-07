@@ -2,9 +2,15 @@
 # coding: utf-8
 import gsw
 import numpy as np
-from scipy import signal
 
-from . import helpers
+__all__ = [
+    "swcalcs",
+    "calc_sal",
+    "calc_temp",
+    "calc_sigma",
+    "calc_depth",
+    "calc_allsal",
+]
 
 
 def swcalcs(data):
@@ -50,6 +56,25 @@ def swcalcs(data):
 
 
 def calc_sal(data):
+    """
+    Add absolute and practical salinity for both sensor pairs.
+
+    Adds variables ``SA1``, ``SA2`` (absolute salinity, g/kg) and ``s1``,
+    ``s2`` (practical salinity) to the dataset, computed from
+    conductivity, temperature, pressure, and the cast position via
+    :func:`calc_allsal`.
+
+    Parameters
+    ----------
+    data : xarray.Dataset
+        CTD time series with ``c1``, ``c2``, ``t1``, ``t2``, ``p``,
+        ``lon``, ``lat``.
+
+    Returns
+    -------
+    xarray.Dataset
+        Input augmented with ``SA1``, ``SA2``, ``s1``, ``s2``.
+    """
     # Salinity
     SA1, SP1 = calc_allsal(data.c1, data.t1, data.p, data.lon, data.lat)
     SA2, SP2 = calc_allsal(data.c2, data.t2, data.p, data.lon, data.lat)
@@ -98,6 +123,24 @@ def calc_sal(data):
 
 
 def calc_temp(data):
+    """
+    Add conservative and potential temperature for both sensor pairs.
+
+    Adds variables ``CT1``, ``CT2`` (conservative temperature, deg C) and
+    ``th1``, ``th2`` (potential temperature, deg C, referenced to 0 dbar)
+    to the dataset.
+
+    Parameters
+    ----------
+    data : xarray.Dataset
+        CTD time series with ``s1``/``s2``, ``SA1``/``SA2``, ``t1``/``t2``,
+        and ``p``. Run :func:`calc_sal` first.
+
+    Returns
+    -------
+    xarray.Dataset
+        Input augmented with ``CT1``, ``CT2``, ``th1``, ``th2``.
+    """
     # Conservative temperature
     for si in ["1", "2"]:
         data["CT{:s}".format(si)] = (
@@ -133,6 +176,23 @@ def calc_temp(data):
 
 
 def calc_sigma(data):
+    """
+    Add potential density anomaly for both sensor pairs.
+
+    Adds variables ``sg1``, ``sg2`` (potential density anomaly, kg/m^3,
+    referenced to 0 dbar) to the dataset.
+
+    Parameters
+    ----------
+    data : xarray.Dataset
+        CTD time series with ``SA1``/``SA2`` and ``CT1``/``CT2``. Run
+        :func:`calc_sal` and :func:`calc_temp` first.
+
+    Returns
+    -------
+    xarray.Dataset
+        Input augmented with ``sg1``, ``sg2``.
+    """
     # Potential density anomaly
     for si in ["1", "2"]:
         data["sg{:s}".format(si)] = (
@@ -152,6 +212,21 @@ def calc_sigma(data):
 
 
 def calc_depth(data):
+    """
+    Add a ``depth`` coordinate (m, positive down) computed from pressure.
+
+    Uses :func:`gsw.z_from_p` with latitude.
+
+    Parameters
+    ----------
+    data : xarray.Dataset
+        CTD time series with ``p`` and ``lat``.
+
+    Returns
+    -------
+    xarray.Dataset
+        Input with a new ``depth`` coordinate.
+    """
     # Depth
     data.coords["depth"] = (
         ("time",),
@@ -197,50 +272,3 @@ def calc_allsal(c, t, p, lon, lat):
         SP = gsw.SP_from_C(10 * c, t, p)
     SA = gsw.SA_from_SP(SP, p, lon, lat)
     return SA, SP
-
-
-def wsink(p, Ts, Fs):
-    """
-    Compute sinking velocity from pressure record.
-
-    Computes the sinking (or rising) velocity from the pressure signal p
-    by first differencing. The pressure signal is smoothed with a low-pass
-    filter for differentiation. If the input signal is shorter than the
-    smoothing time scale, w is taken as the slope of the linear regression of p.
-
-    Adapted from wsink.m - Fabian Wolk, Rockland Oceanographic Services Inc.
-
-    Parameters
-    ----------
-    p : array-like
-        Pressure [dbar]
-    Ts : float
-        Smoothing time scale [s]
-    Fs : float
-        Sampling frequency [Hz]
-
-    Returns
-    -------
-    w : array-like
-        Sinking velocity [dbar/s]
-    """
-    FORDER = 1
-    # low pass filter coefficients
-    [b, a] = signal.butter(FORDER, 1 / Ts * 2 / Fs)
-    N = p.size
-    if N <= Fs * Ts * FORDER:
-        pol = np.polyfit(np.array(range(N)), p, 1)
-        w = pol[0] * Fs * np.ones(N)
-    else:
-        # pad the pressure vector left and right
-        nPad = int(FORDER * Ts * Fs)
-        if nPad > N:
-            print(
-                "warning: length of pressure vector is smaller than padding length.\n",
-                "Filter transients may occur.",
-            )
-        p = helpers.pad_lr(p, nPad)
-        w = np.gradient(Fs * signal.filtfilt(b, a, p))
-        w = w[nPad:-nPad]
-
-    return w

@@ -5,6 +5,17 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
 
+__all__ = [
+    "findsegments",
+    "inearby",
+    "interpbadsegments",
+    "glitchcorrect",
+    "preen",
+    "unique_arrays",
+    "mtlb2datetime",
+    "datetime2mtlb",
+]
+
 
 def unique_arrays(*arrays):
     """
@@ -228,25 +239,6 @@ def preen(x, xmin, xmax):
     return xp
 
 
-def atanfit(x, f, Phi, W):
-    f = np.arctan(2 * np.pi * f * x[0]) + 2 * np.pi * f * x[1] + Phi
-    f = np.matmul(np.matmul(f.transpose(), W**4), f)
-    return f
-
-
-def pad_lr(p, nPad):
-    """Pad array left and right"""
-    p0 = p[0]
-    p = p - p0
-    p = p0 + np.insert(p, 0, -p[nPad - 1 :: -1])
-
-    p0 = p[-1]
-    p = p - p0
-    p = p0 + np.insert(p, -1, -p[: -nPad - 1 : -1])
-
-    return p
-
-
 def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False):
     """
     Convert Matlab datenum format to python datetime.
@@ -309,6 +301,19 @@ def mtlb2datetime(matlab_datenum, strip_microseconds=False, strip_seconds=False)
 
 
 def datetime2mtlb(dt):
+    """
+    Convert a numpy datetime64 array to MATLAB datenum.
+
+    Parameters
+    ----------
+    dt : array-like of numpy.datetime64
+        Input timestamps.
+
+    Returns
+    -------
+    numpy.ndarray of float
+        MATLAB datenum values (days since the MATLAB epoch).
+    """
     pt = pd.to_datetime(dt)
     dt = pt.to_pydatetime()
     mdn = dt + datetime.timedelta(days=366)

@@ -15,14 +15,55 @@ from scipy.signal import savgol_filter
 from .calcs import calc_allsal
 from .helpers import datetime2mtlb, mtlb2datetime
 
+__all__ = [
+    "CTDHex",
+    "CTDx",
+    "add_default_proc_params",
+    "prof_to_mat",
+]
+
 
 def CTDx(filename):
+    """
+    Convenience wrapper that returns a ready-to-process xarray Dataset.
+
+    Combines :class:`CTDHex` parsing, :meth:`CTDHex.to_xarray` conversion,
+    and :func:`add_default_proc_params` in a single call.
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path to a Seabird ``.hex`` file. The matching ``.xmlcon``
+        calibration file must sit alongside it.
+
+    Returns
+    -------
+    xarray.Dataset
+        Time series of raw sensor channels in physical units, with
+        default processing parameters attached as ``attrs``.
+    """
     c = CTDHex(filename).to_xarray()
     add_default_proc_params(c)
     return c
 
 
 def add_default_proc_params(ds):
+    """
+    Attach the default processing parameters to ``ds.attrs`` in place.
+
+    Sets bounds for valid pressure / temperature / conductivity /
+    salinity (``bounds_p``/``bounds_t``/``bounds_c``/``bounds_s``);
+    spike thresholds for despiking (``spike_thresh_t``,
+    ``spike_thresh_s``); glitch-correction thresholds
+    (``diff_*``/``prod_*`` for p/t/c/s); the sinking-velocity threshold
+    used by :func:`ctdproc.proc.rmloops` (``wthresh``); and plotting
+    flags (``plot_spectra``, ``plot_path``).
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        CTD time series. Modified in place; nothing is returned.
+    """
     ds.attrs["verbose"] = 1
     ds.attrs["bounds_p"] = [0.0, 6200.0]
     ds.attrs["bounds_t"] = [-2.0, 40.0]
@@ -45,12 +86,38 @@ def add_default_proc_params(ds):
 
 class CTDHex(object):
     """
-    Converter for Seabird CTD data in hex format. Initialize with full path to hex file.
-    xml config file needs to be located in the same directory.
+    Converter for Seabird 9/11 CTD data in hex format.
 
-    TODO:
-      - Add oxygen hysteresis
-      - Convert fluorometer voltage
+    Parses a Seabird ``.hex`` data file and its companion ``.xmlcon``
+    calibration file into time series of physical sensor values.
+
+    Parameters
+    ----------
+    filename : str or pathlib.Path
+        Path to the ``.hex`` file. The matching ``.xmlcon`` file must be
+        in the same directory.
+
+    Attributes
+    ----------
+    filename : pathlib.Path
+        Path to the source hex file.
+    cfgp : munch.Munch
+        Parsed sensor configuration from the xmlcon file.
+    dataraw : pandas.DataFrame
+        Raw voltage and frequency data.
+    data : pandas.DataFrame
+        Sensor data converted to physical units (populated by
+        :meth:`physicalunits`).
+
+    Examples
+    --------
+    >>> c = CTDHex("path/to/cast.hex")
+    >>> ds = c.to_xarray()
+
+    Notes
+    -----
+    Outstanding gaps: oxygen hysteresis correction, fluorometer voltage
+    conversion.
     """
 
     def __init__(self, filename):
@@ -190,6 +257,15 @@ class CTDHex(object):
             self._extra_hexoffset = 0
 
     def parse_hex(self):  # noqa: C901
+        """
+        Parse the hex file into a raw frequency/voltage DataFrame.
+
+        Reads the binary-encoded sensor words for the five frequency
+        channels (pressure, two temperature, two conductivity), the eight
+        voltage channels, the mod-count, the timestamp, SPAR, ship
+        position, and CTD status into ``self.dataraw``. Called
+        automatically by :meth:`physicalunits`.
+        """
         # Generate data structure for converted data: 5 freq, 8 voltage channels
         tmp = {}
         for i in range(5):
@@ -553,7 +629,13 @@ class CTDHex(object):
             self.xmlfile = p.joinpath(xmlfile)
 
     def read_xml_config(self):
-        """Read xml config file."""
+        """
+        Parse the companion ``.xmlcon`` calibration file into ``self.cfgp``.
+
+        Locates the xmlcon file alongside the hex file, parses the
+        ``SensorArray`` block, and converts coefficient strings to floats.
+        Sensors not in the supported set are skipped.
+        """
         self._find_xmlconfig()
         try:
             with open(self.xmlfile) as fd:
@@ -614,6 +696,16 @@ class CTDHex(object):
                     self.cfgp[k].cal[ki] = "N/A"
 
     def physicalunits(self):
+        """
+        Convert raw frequencies and voltages into physical units.
+
+        Applies the calibration coefficients in ``self.cfgp`` to the
+        contents of ``self.dataraw`` and stores the result in
+        ``self.data`` as a :class:`munch.Munch` of named time series:
+        pressure (dbar), temperature (deg C), conductivity (mS/cm),
+        salinity, oxygen (ml/L), altimeter, transmissivity, PAR, SPAR,
+        fluorescence, and time.
+        """
         # pressure
         self._p_atm = 10.1353  # why not 10.1325 dbar?
         self.data = Munch()
@@ -934,7 +1026,14 @@ class CTDHex(object):
         return sbetime
 
     def to_mat(self, matname):
-        """Save data in Matlab format."""
+        """
+        Save the converted time series to a MATLAB ``.mat`` file.
+
+        Parameters
+        ----------
+        matname : str or pathlib.Path
+            Output ``.mat`` filename.
+        """
         ctdout = self.data.copy()
         ctdout.pop("time")
         # ctdout.pop('matlabtime')
@@ -984,6 +1083,18 @@ class CTDHex(object):
 
 
 def prof_to_mat(matname, datad, datau):
+    """
+    Save processed down- and up-cast Datasets to a single MATLAB file.
+
+    Parameters
+    ----------
+    matname : str or pathlib.Path
+        Output ``.mat`` filename.
+    datad : xarray.Dataset
+        Processed downcast.
+    datau : xarray.Dataset
+        Processed upcast.
+    """
     out = dict(
         datad=datad,
         datau=datau,
