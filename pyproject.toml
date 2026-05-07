@@ -41,6 +41,9 @@ build-backend = "uv_build"
 dev = [
     "pytest>=8.4.2",
     "ruff>=0.14.2",
+    {include-group = "docs"},
+]
+docs = [
     "sphinx>=7.4.7",
     "sphinx-issues>=5.0.1",
     "sphinx-rtd-theme>=3.0.2",
