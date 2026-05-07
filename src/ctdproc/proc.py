@@ -277,18 +277,10 @@ def phase_correct(ds):
 
     # fft of each segment (row). Data are detrended, then windowed.
     window = signal.windows.triang(N) * np.ones((m, N))
-    At1 = fft.fft(
-        signal.detrend(np.reshape(ds.t1.data[i1:i2], shape=(m, N))) * window
-    )
-    At2 = fft.fft(
-        signal.detrend(np.reshape(ds.t2.data[i1:i2], shape=(m, N))) * window
-    )
-    Ac1 = fft.fft(
-        signal.detrend(np.reshape(ds.c1.data[i1:i2], shape=(m, N))) * window
-    )
-    Ac2 = fft.fft(
-        signal.detrend(np.reshape(ds.c2.data[i1:i2], shape=(m, N))) * window
-    )
+    At1 = fft.fft(signal.detrend(np.reshape(ds.t1.data[i1:i2], shape=(m, N))) * window)
+    At2 = fft.fft(signal.detrend(np.reshape(ds.t2.data[i1:i2], shape=(m, N))) * window)
+    Ac1 = fft.fft(signal.detrend(np.reshape(ds.c1.data[i1:i2], shape=(m, N))) * window)
+    Ac2 = fft.fft(signal.detrend(np.reshape(ds.c2.data[i1:i2], shape=(m, N))) * window)
 
     # Positive frequencies only
     At1 = At1[:, 0 : int(N / 2)]

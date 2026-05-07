@@ -22,9 +22,12 @@ build:
 sphinx:
   configuration: docs/conf.py
 
-# Optionally set the version of Python and requirements required to build your docs
+# Install docs dependencies via uv (RTD's native uv support).
+# `uv sync` reads pyproject.toml and installs the project itself in editable
+# mode by default, so we only need to point it at the `docs` dependency group.
 python:
   install:
-    - requirements: docs/requirements.txt
-    - method: pip
-      path: .
+    - method: uv
+      command: sync
+      groups:
+        - docs
