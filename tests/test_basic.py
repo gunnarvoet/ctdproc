@@ -4,6 +4,7 @@ import pytest
 import xarray as xr
 import numpy as np
 import ctdproc as ctd
+from munch import munchify
 
 
 # We defined rootdir as a fixture in conftest.py
@@ -87,3 +88,24 @@ def test_pressure_uses_averaged_pressure_temp(rootdir):
     )
     assert not np.allclose(c.data.p, p_instantaneous)
     assert np.max(np.abs(c.data.p - p_instantaneous)) < 0.1
+
+
+def test_altimeter_conversion_matches_seabird(rootdir):
+    """Altimeter height is 300 * volts / scale factor + offset."""
+    hexfile = rootdir / "data/BLT_Test_001.hex"
+    c = ctd.io.CTDHex(hexfile)
+    acal = c.cfgp.AltimeterSensor.cal
+    # all test fixtures use the standard 15.000 scale factor
+    assert acal.ScaleFactor == 15.0
+    volt = np.array([0.0, 2.5, 5.0])
+    alt = c._volt2alt(volt, acal)
+    # a 0-5 V altimeter at the standard scale factor is a 100 m unit
+    np.testing.assert_allclose(alt, [0.0, 50.0, 100.0])
+
+
+def test_altimeter_conversion_applies_offset(rootdir):
+    """The offset is added after scaling."""
+    hexfile = rootdir / "data/BLT_Test_001.hex"
+    c = ctd.io.CTDHex(hexfile)
+    acal = munchify({"ScaleFactor": 30.0, "Offset": 2.0})
+    np.testing.assert_allclose(c._volt2alt(np.array([3.0]), acal), [32.0])
