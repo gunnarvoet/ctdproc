@@ -1,5 +1,6 @@
 import pathlib
 
+import pytest
 import xarray as xr
 import numpy as np
 import ctdproc as ctd
@@ -54,3 +55,35 @@ def _check_modcount_errors(modcount):
     mmc = np.mod(dmc, 256)
     fmc = np.squeeze(np.where(mmc - 1))
     assert len(fmc) == 0
+
+
+def test_pressure_temp_average_is_backward_looking():
+    """The running mean must not see into the future."""
+    pst = np.zeros(100)
+    pst[50:] = 1.0
+    avg = ctd.io._average_pressure_temp(pst, window_seconds=1.0, sample_rate=10.0)
+    assert avg[49] == 0.0
+    assert avg[50] == pytest.approx(0.1)
+    assert avg[58] == pytest.approx(0.9)
+    assert avg[59] == pytest.approx(1.0)
+
+
+def test_pressure_temp_average_expands_at_start_of_record():
+    """Fewer than one window of samples averages over what is available."""
+    pst = np.arange(10, dtype="float64")
+    avg = ctd.io._average_pressure_temp(pst, window_seconds=1.0, sample_rate=10.0)
+    assert not np.any(np.isnan(avg))
+    assert avg[0] == pytest.approx(0.0)
+    assert avg[3] == pytest.approx(1.5)
+
+
+def test_pressure_uses_averaged_pressure_temp(rootdir):
+    """Pressure is computed from averaged, not instantaneous, pressure temperature."""
+    hexfile = rootdir / "data/BLT_Test_001.hex"
+    c = ctd.io.CTDHex(hexfile)
+    p_instantaneous = (
+        c._freq2pressure(c.dataraw.p, c.dataraw.pst, c.cfgp.PressureSensor.cal)
+        - c._p_atm
+    )
+    assert not np.allclose(c.data.p, p_instantaneous)
+    assert np.max(np.abs(c.data.p - p_instantaneous)) < 0.1

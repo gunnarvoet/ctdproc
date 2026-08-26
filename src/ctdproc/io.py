@@ -84,6 +84,46 @@ def add_default_proc_params(ds):
     ds.attrs["plot_path"] = ""
 
 
+def _average_pressure_temp(pst, window_seconds=30.0, sample_rate=24.0):
+    """
+    Apply a backward-looking running mean to the pressure sensor temperature.
+
+    Seabird computes pressure from a 30 second backward-looking running
+    average of the pressure temperature to keep bit transitions in the
+    12 bit pressure temperature word from causing small jumps in computed
+    pressure. The heavily insulated pressure sensor has a thermal time
+    constant of about one hour, so the average does not significantly alter
+    the pressure temperature itself.
+
+    At the beginning of the record, where less than one window of data is
+    available, the average is taken over all samples read so far.
+
+    Parameters
+    ----------
+    pst : array-like
+        Pressure sensor temperature (12 bit counts).
+    window_seconds : float, optional
+        Length of the averaging window [s]. Defaults to 30, the value used
+        by Seabird.
+    sample_rate : float, optional
+        Sampling frequency [Hz]. Defaults to 24, the sampling rate of the
+        Seabird 9/11.
+
+    Returns
+    -------
+    pst_avg : np.array
+        Averaged pressure sensor temperature (12 bit counts).
+    """
+    window = int(np.round(window_seconds * sample_rate))
+    pst_avg = (
+        pd.Series(np.asarray(pst, dtype="float64"))
+        .rolling(window, min_periods=1)
+        .mean()
+        .to_numpy()
+    )
+    return pst_avg
+
+
 class CTDHex(object):
     """
     Converter for Seabird 9/11 CTD data in hex format.
@@ -711,10 +751,11 @@ class CTDHex(object):
         self.data = Munch()
         self.data.lon = self.dataraw.lon
         self.data.lat = self.dataraw.lat
+        # Seabird averages the pressure sensor temperature over the past
+        # 30 seconds before computing pressure, see _average_pressure_temp.
+        pst = _average_pressure_temp(self.dataraw.pst)
         self.data.p = (
-            self._freq2pressure(
-                self.dataraw.p, self.dataraw.pst, self.cfgp.PressureSensor.cal
-            )
+            self._freq2pressure(self.dataraw.p, pst, self.cfgp.PressureSensor.cal)
             - self._p_atm
         )
         self.data.t1 = self._freq2temp(

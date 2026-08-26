@@ -33,6 +33,7 @@ Breaking Changes
 Bug Fixes
 ~~~~~~~~~
 * Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)
+* Compute pressure from a 30 second backward-looking running average of the pressure sensor temperature, as specified in the SBE Data Processing manual. Previously the instantaneous 12 bit pressure temperature word was used, so bit transitions caused small jumps in computed pressure. Computed pressure changes by order 0.01 dbar. (:issue:`48`)
 
 Documentation
 ~~~~~~~~~~~~~
