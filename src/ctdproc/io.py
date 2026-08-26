@@ -937,8 +937,26 @@ class CTDHex(object):
         return cond
 
     def _volt2alt(self, volt, acal):
-        """Calculate altimeter data from voltage."""
-        alt = volt * acal.ScaleFactor + acal.Offset
+        """Calculate altimeter height above bottom from voltage.
+
+        Uses the Sea-Bird conversion ``300 * volts / ScaleFactor + Offset``.
+        With the standard scale factor of 15, a 0-5 V altimeter thus covers
+        0-100 m.
+
+        Parameters
+        ----------
+        volt : array-like
+            Altimeter voltage.
+        acal : Munch
+            Altimeter calibration structure with fields `ScaleFactor` and
+            `Offset`.
+
+        Returns
+        -------
+        alt : array-like
+            Height above bottom [m].
+        """
+        alt = 300 * volt / acal.ScaleFactor + acal.Offset
         return alt
 
     def _volt2trans(self, volt, transcal):
