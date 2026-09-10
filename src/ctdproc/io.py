@@ -813,26 +813,22 @@ class CTDHex(object):
                 "long_name": "Absolute Salinity",
                 "units": "g/kg",
             }
+        self.data.modcount = self.dataraw.modcount
+        self._check_modcount_errors(self.data.modcount)
+        # time before oxygen: the SBE43 tau*dV/dt correction differentiates the
+        # voltage in time and needs seconds, not scan numbers
+        self.data.dtnum = self.sbetime_to_mattime(self.dataraw.time)
+        self.data.time = self.mattime_to_datetime64(self.data.dtnum)
         if hasattr(self.dataraw, "oxygen1"):
-            if hasattr(self.data, "time"):
-                time = self.data.time
-            elif hasattr(self.data, "scan"):
-                time = self.data.scan
-            else:
-                time = np.arange(len(self.dataraw.oxygen1))
             self.data.oxygen1 = self._volt2oxygen(
                 self.dataraw.oxygen1,
                 self.data.t1,
                 self.data.sal,
                 self.data.p,
-                time,
+                self.data.time,
                 self.cfgp[self._mapnames_volt["oxygen1"]["name"]].cal,
                 min_pressure=1.0,
             )
-        self.data.modcount = self.dataraw.modcount
-        self._check_modcount_errors(self.data.modcount)
-        self.data.dtnum = self.sbetime_to_mattime(self.dataraw.time)
-        self.data.time = self.mattime_to_datetime64(self.data.dtnum)
 
     def _calculate_oxsol(self, temp, salinity):
         """

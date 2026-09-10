@@ -109,3 +109,15 @@ def test_altimeter_conversion_applies_offset(rootdir):
     c = ctd.io.CTDHex(hexfile)
     acal = munchify({"ScaleFactor": 30.0, "Offset": 2.0})
     np.testing.assert_allclose(c._volt2alt(np.array([3.0]), acal), [32.0])
+
+
+def test_oxygen_tau_correction_differentiates_in_seconds(rootdir):
+    """The SBE43 tau*dV/dt term needs time in seconds. physicalunits used to
+    convert oxygen before data.time existed and fell back to the scan index."""
+    c = ctd.io.CTDHex(rootdir / "data/lajit2-sr1614-001.hex")
+    cal = c.cfgp[c._mapnames_volt["oxygen1"]["name"]].cal
+    tsec = (c.data.time - c.data.time[0]) / np.timedelta64(1, "s")
+    expect = c._volt2oxygen(
+        c.dataraw.oxygen1, c.data.t1, c.data.sal, c.data.p, tsec, cal, min_pressure=1.0
+    )
+    np.testing.assert_array_equal(c.data.oxygen1, expect)
