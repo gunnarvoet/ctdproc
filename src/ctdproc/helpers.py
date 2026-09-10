@@ -144,6 +144,17 @@ def interpbadsegments(x, ibad):
     return y
 
 
+def _greater(a, b):
+    """``a > b`` where ``a`` is finite, False elsewhere.
+
+    ``np.greater`` with ``where=`` and no ``out=`` leaves the masked entries
+    uninitialized, so a comparison against NaN came back True or False at
+    random and processing was not repeatable.
+    """
+    a = np.asarray(a)
+    return np.greater(a, b, out=np.zeros(a.shape, dtype=bool), where=np.isfinite(a))
+
+
 def glitchcorrect(x, diffx, prodx, ibefore=0, iafter=0):
     """
     Remove glitches/spikes in array.
@@ -185,18 +196,8 @@ def glitchcorrect(x, diffx, prodx, ibefore=0, iafter=0):
     dmul2 = -dx[0:-1] * dx[1:]
     dmul3 = -dx[0:-2] * dx[2:]
 
-    ii2 = np.squeeze(
-        np.argwhere(
-            np.greater(dmul2, prodx, where=np.isfinite(dmul2))
-            & np.greater(dmin2, diffx, where=np.isfinite(dmin2))
-        )
-    )
-    ii3 = np.squeeze(
-        np.argwhere(
-            np.greater(dmul3, prodx, where=np.isfinite(dmul3))
-            & np.greater(dmin3, diffx, where=np.isfinite(dmin3))
-        )
-    )
+    ii2 = np.squeeze(np.argwhere(_greater(dmul2, prodx) & _greater(dmin2, diffx)))
+    ii3 = np.squeeze(np.argwhere(_greater(dmul3, prodx) & _greater(dmin3, diffx)))
 
     ii2 = unique_arrays(ii2, ii2 + 1)
     ii3 = unique_arrays(ii3, ii3 + 1, ii3 + 2)

@@ -239,12 +239,7 @@ def despike(da, spike_threshold):
         The input data with spikes replaced by NaN.
     """
     absdiff = np.absolute(np.diff(da.data))
-    # Using np.greater instead of the > operator as we can use the where option
-    # and avoid the warning when nans are compared to a number. It broadcasts
-    # to the original array size.
-    ib = np.squeeze(
-        np.where(np.greater(absdiff, spike_threshold, where=np.isfinite(absdiff)))
-    )
+    ib = np.squeeze(np.where(helpers._greater(absdiff, spike_threshold)))
     da[ib] = np.nan
 
     return da
