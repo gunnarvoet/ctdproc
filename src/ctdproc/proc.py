@@ -10,6 +10,7 @@ from . import calcs, helpers
 
 __all__ = [
     "run_all",
+    "run_profile",
     "cleanup",
     "cleanup_ud",
     "split_updn",
@@ -59,19 +60,82 @@ def run_all(ds):
     bincast : depth-bin the result of this function.
     """
     ds = cleanup(ds)
-
     ds_updown = split_updn(ds)
-
     for v, d in ds_updown.items():
-        add_tcfit_default(d)
-        d = d.dropna("time", how="any")
-        d = phase_correct(d)
-        d = calcs.swcalcs(d)
-        d = rmloops(d)
-        d = cleanup_ud(d)
-        ds_updown[v] = d
-
+        ds_updown[v] = run_profile(d, clean=False)
     return ds_updown
+
+
+# phase_correct works on segments of this many 24 Hz scans, and both its fit and
+# the spectra it recomputes after the correction need at least two of them
+_N_SEGMENT = 512
+_MIN_SEGMENTS = 2
+
+
+def run_profile(ds, clean=True):
+    """
+    Process one single-direction piece of a CTD record.
+
+    Runs :func:`cleanup` when ``clean``, then the per-direction chain of
+    :func:`run_all`: :func:`add_tcfit_default`, dropping samples with any NaN,
+    :func:`phase_correct`, :func:`ctdproc.calcs.swcalcs`, :func:`rmloops` and
+    :func:`cleanup_ud`. The piece is whatever the caller cut: half of a CTD
+    cast, a yo, or one leg of a towyo.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        24 Hz time series of one direction with the processing parameters in
+        ``ds.attrs`` (see :func:`ctdproc.io.add_default_proc_params`). Not
+        modified.
+    clean : bool, optional
+        Run :func:`cleanup` first. :func:`run_all` passes False because it
+        cleans the whole cast before splitting it. Defaults to True.
+
+    Returns
+    -------
+    xarray.Dataset
+        The processed piece, with the phase fit in ``attrs`` as ``tau1``,
+        ``tau2``, ``L1`` and ``L2``.
+
+    Raises
+    ------
+    ValueError
+        When the piece spans fewer than 1024 scans (43 s) inside the t/c fit
+        pressure range or below 1 dbar, too few for :func:`phase_correct`.
+    """
+    # cleanup writes into arrays in place, and a slice of a larger Dataset
+    # shares its memory and attrs; work on a copy
+    ds = ds.copy(deep=True)
+    if clean:
+        ds = cleanup(ds)
+    add_tcfit_default(ds)
+    ds = ds.dropna("time", how="any")
+    _check_phase_length(ds)
+    ds = phase_correct(ds)
+    ds = calcs.swcalcs(ds)
+    ds = rmloops(ds)
+    ds = cleanup_ud(ds)
+    return ds
+
+
+def _check_phase_length(ds):
+    need = _N_SEGMENT * _MIN_SEGMENTS
+    p = ds.p.data
+    lo, hi = ds.attrs["tcfit"]
+    for label, inside in (
+        (
+            f"the t/c fit range {float(lo):.0f} to {float(hi):.0f} dbar",
+            (p > lo) & (p < hi),
+        ),
+        ("the record below 1 dbar", p > 1),
+    ):
+        ii = np.flatnonzero(inside)
+        n = 0 if ii.size == 0 else int(ii[-1] - ii[0] + 1)
+        if n < need:
+            raise ValueError(
+                f"piece too short for the phase fit: {n} scans in {label}, need {need}"
+            )
 
 
 def add_tcfit_default(ds):
@@ -512,14 +576,14 @@ def phase_correct(ds):
 
     # Generate output structure. Copy attributes over.
     out = xr.Dataset(coords={"time": time})
-    out.attrs = ds.attrs
+    out.attrs = dict(ds.attrs)
     out["lon"] = lon
     out["lat"] = lat
     for v in vars:
         if v in ds:
             out[v] = xr.DataArray(Adi[v], coords=(out.time,))
             out[v].attrs = ds[v].attrs
-    out.assign_attrs(dict(tau1=tau1, tau2=tau2, L1=L1, L2=L2))
+    out.attrs.update(tau1=float(tau1), tau2=float(tau2), L1=float(L1), L2=float(L2))
 
     # ---Recalculate and replot spectra, coherence and phase---
     t1 = Adi["t1"][int(N / 4) : -int(N / 4)]  # Now N elements shorter

@@ -23,6 +23,10 @@ History
 
 New Features
 ~~~~~~~~~~~~
+* ``proc.run_profile`` processes one single-direction piece the caller has cut (half of a
+  cast, a yo, one towyo leg) with the per-direction chain of ``run_all``, which now calls
+  it. ``run_all`` output is unchanged. A piece under 1024 scans (43 s) in the t/c fit range
+  raises ``ValueError``.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~
@@ -37,6 +41,9 @@ Bug Fixes
 * Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)
 * Compute pressure from a 30 second backward-looking running average of the pressure sensor temperature, as specified in the SBE Data Processing manual. Previously the instantaneous 12 bit pressure temperature word was used, so bit transitions caused small jumps in computed pressure. Computed pressure changes by order 0.01 dbar. (:issue:`48`)
 * Convert altimeter voltage with the Sea-Bird formula ``300 * volts / ScaleFactor + Offset``. The scale factor was previously applied as a multiplier, so with the standard scale factor of 15 the altimeter was read as a 75 m rather than a 100 m unit. Reported height above bottom changes by a factor of 4/3 for every reprocessed cast. Note that this corrects the conversion only; it does not address any remaining scale error in ``alt`` from the altimeter's internal sound speed assumption. (:issue:`60`)
+* ``phase_correct`` keeps the fitted thermistor time constants and lags as ``tau1``,
+  ``tau2``, ``L1``, ``L2`` in the output attrs. ``assign_attrs`` returned a new object that
+  was discarded, and the output shared its attrs dict with the input.
 
 Documentation
 ~~~~~~~~~~~~~
