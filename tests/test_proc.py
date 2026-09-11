@@ -94,3 +94,46 @@ def test_phase_correct_records_its_fit_per_direction(lajit):
             assert np.isfinite(out[d].attrs[k])
     assert out["down"].attrs is not out["up"].attrs
     assert out["down"].attrs["tau1"] != out["up"].attrs["tau1"]
+
+
+def _up_leg_deeper_than_100dbar(lajit):
+    """A towyo-like piece cut at the turnaround: starts at its own pressure
+    maximum and never rises above 1 dbar."""
+    up = ctd.proc.split_updn(ctd.proc.cleanup(lajit.copy(deep=True)))["up"]
+    deep = np.flatnonzero(up.p.values > 100)
+    return up.isel(time=deep)
+
+
+def test_cleanup_accepts_a_piece_that_starts_at_its_deepest(lajit):
+    piece = _up_leg_deeper_than_100dbar(lajit)
+    first_time = piece.time.values[0]
+    out = ctd.proc.cleanup(piece.copy(deep=True))
+    assert out.time.values[0] == first_time
+
+
+def test_run_profile_on_an_up_leg_that_starts_at_its_deepest(lajit):
+    # The piece's start is the real turnaround of this cast, where the
+    # package genuinely reverses; rmloops correctly NaNs that short loop
+    # (343 samples here, the same run already present at the start of
+    # run_all's "up" output for this cast -- see the report). Assert
+    # finite, stable output past the turnaround rather than everywhere.
+    piece = _up_leg_deeper_than_100dbar(lajit)
+    out = ctd.proc.run_profile(piece)
+    assert np.isfinite(out.CT1.values[500:]).all()
+
+
+@pytest.mark.parametrize("direction", ["down", "up"])
+def test_rmloops_on_a_leg_without_loops(direction):
+    n = 24 * 100  # 100 s at 24 Hz
+    p = np.linspace(0, 100, n)
+    if direction == "up":
+        p = p[::-1]
+    time = np.datetime64("2020-01-01") + np.arange(n) * np.timedelta64(1000 // 24, "ms")
+    ds = xr.Dataset(
+        {"p": ("time", p), "t1": ("time", np.linspace(10, 5, n))},
+        coords={"time": time},
+    )
+    ctd.io.add_default_proc_params(ds)
+    before = ds.copy(deep=True)
+    out = ctd.proc.rmloops(ds)
+    xr.testing.assert_identical(out, before)

@@ -193,7 +193,7 @@ def cleanup(ds):
     ptop = 1
     fdeep = np.squeeze(np.where(ds.p.data > ptop))
     ideepstart, ideepstop, ideeplen = helpers.findsegments(fdeep)
-    ii = np.max(ideepstart[ideepstart < ipmax])
+    ii = np.max(ideepstart[ideepstart <= ipmax])
     jj = np.min(ideepstop[ideepstop >= ipmax])
     ds = ds.isel(time=range(ii, jj + 1))
 
@@ -753,7 +753,7 @@ def rmloops(ds):
     tsmooth = 0.25  # seconds
     fs = 24  # Hz
     w = wsink(ds.p.data, tsmooth, fs)  # down/up +/-ve
-    iloop = np.array([])
+    iloop = np.array([], dtype="int64")
 
     # up or downcast?
     pol = np.polyfit(np.array(range(ds.p.size)), ds.p, 1)
@@ -776,7 +776,7 @@ def rmloops(ds):
                 iloop = np.unique(iloop)
             iloop = iloop.astype("int64")
         else:
-            iloop = np.array([])
+            iloop = np.array([], dtype="int64")
     else:
         # upcast
         flp = np.squeeze(np.argwhere(w > -ds.attrs["wthresh"]))
@@ -794,7 +794,7 @@ def rmloops(ds):
                 iloop = np.unique(iloop)
             iloop = iloop.astype("int64")
         else:
-            iloop = np.array([])
+            iloop = np.array([], dtype="int64")
 
     # get data variable names
     varnames = [k for k, v in ds.data_vars.items()]

@@ -44,6 +44,13 @@ Bug Fixes
 * ``phase_correct`` keeps the fitted thermistor time constants and lags as ``tau1``,
   ``tau2``, ``L1``, ``L2`` in the output attrs. ``assign_attrs`` returned a new object that
   was discarded, and the output shared its attrs dict with the input.
+* ``proc.cleanup`` accepts a piece that starts at its deepest sample, such as a towyo up leg
+  cut at the turnaround. The search for the start of the deep part excluded the index of the
+  pressure maximum itself, so such a piece raised ``ValueError`` from ``np.max`` of an empty
+  array.
+* ``proc.rmloops`` accepts a piece without loops. Its index of loop samples started as an
+  empty float array and stayed one when no sample fell below ``wthresh``, which raised
+  ``IndexError`` on assignment. It is now an empty integer array.
 
 Documentation
 ~~~~~~~~~~~~~
