@@ -25,7 +25,7 @@ New Features
 ~~~~~~~~~~~~
 * ``proc.run_profile`` processes one single-direction piece the caller has cut (half of a
   cast, a yo, one towyo leg) with the per-direction chain of ``run_all``, which now calls
-  it. ``run_all`` output is unchanged. A piece under 1024 scans (43 s) in the t/c fit range
+  it. The refactor leaves ``run_all`` output unchanged. A piece under 1024 scans (43 s) in the t/c fit range
   raises ``ValueError``.
 
 Breaking Changes
@@ -36,6 +36,15 @@ Breaking Changes
 
 Bug Fixes
 ~~~~~~~~~
+* ``calcs.calc_temp`` computes conservative temperature from absolute salinity. It passed
+  practical salinity to ``gsw.CT_from_t`` in every release from 0.1.1 to 0.2.0, so ``CT1``
+  and ``CT2`` came out too warm, and the potential density anomalies ``sg1`` and ``sg2``,
+  computed from CT, too light. On RR1708 cast 003 (yosonar level 5, fine grid) the error is
+  0.0020 degC median in CT (5th to 95th percentile 0.0019 to 0.0023) and -0.00018 kg m-3
+  median in sigma0. On ``lajit2-sr1614-001.hex`` it is 0.0025 to 0.0026 degC and -0.00034
+  to -0.00036 kg m-3. Potential temperature ``th1``, ``th2`` and absolute salinity were
+  right. Output of ``run_all``, ``run_profile`` and ``bincast`` changes in ``CT1``, ``CT2``,
+  ``sg1`` and ``sg2``.
 * Convert SBE43 oxygen after the time vector exists. ``CTDHex.physicalunits`` converted oxygen first and handed ``_volt2oxygen`` the scan index as time in seconds, so the tau*dV/dt term came out 1/24 of its size, from a 5-scan derivative window. On RR1708 ``FLEAT_recovery_002.hex`` the corrected ``oxygen1`` differs by 0.008 ml/L median absolute, 0.066 at the 95th and 0.14 at the 99th percentile, against a median of 2.27 ml/L.
 * Initialize the output of the NaN-masked comparisons in ``helpers.glitchcorrect`` and ``proc.despike``. ``np.greater`` with ``where=`` and no ``out=`` leaves the masked entries uninitialized, so a comparison against NaN came back True at random and ``run_all`` returned different output on repeated runs of the same file: 1 to 11 samples per variable on ``lajit2-sr1614-001.hex``, up to 1.3e-4 in CT and sigma0, and moving NaN positions.
 * Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)

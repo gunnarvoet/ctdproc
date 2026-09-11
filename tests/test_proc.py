@@ -1,6 +1,7 @@
 import pathlib
 import warnings
 
+import gsw
 import numpy as np
 import pytest
 import xarray as xr
@@ -85,6 +86,18 @@ def test_run_profile_rejects_a_piece_too_short_for_the_phase_fit(lajit):
     deep = np.flatnonzero(down.p.values > 300)[:400]
     with pytest.raises(ValueError, match="too short for the phase fit"):
         ctd.proc.run_profile(down.isel(time=deep), clean=False)
+
+
+@pytest.mark.parametrize("si", ["1", "2"])
+def test_conservative_temperature_is_computed_from_absolute_salinity(lajit, si):
+    down = ctd.proc.run_all(lajit.copy(deep=True))["down"]
+    SA, SP, t, p = (down[v].values for v in (f"SA{si}", f"s{si}", f"t{si}", "p"))
+    from_sa = gsw.CT_from_t(SA, t, p)
+    from_sp = gsw.CT_from_t(SP, t, p)
+    # SA - SP is 0.15 to 0.18 g/kg on this file, so CT from SP is at least
+    # 0.002 degC warmer and the two are told apart
+    assert np.nanmin(np.abs(from_sp - from_sa)) > 1e-4
+    np.testing.assert_array_equal(down[f"CT{si}"].values, from_sa)
 
 
 def test_phase_correct_records_its_fit_per_direction(lajit):

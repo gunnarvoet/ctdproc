@@ -133,8 +133,8 @@ def calc_temp(data):
     Parameters
     ----------
     data : xarray.Dataset
-        CTD time series with ``s1``/``s2``, ``SA1``/``SA2``, ``t1``/``t2``,
-        and ``p``. Run :func:`calc_sal` first.
+        CTD time series with ``SA1``/``SA2``, ``t1``/``t2``, and ``p``. Run
+        :func:`calc_sal` first.
 
     Returns
     -------
@@ -145,9 +145,7 @@ def calc_temp(data):
     for si in ["1", "2"]:
         data["CT{:s}".format(si)] = (
             ("time",),
-            gsw.CT_from_t(
-                data["s{:s}".format(si)], data["t{:s}".format(si)], data.p
-            ).data,
+            gsw.CT_from_t(data[f"SA{si}"], data[f"t{si}"], data.p).data,
             {
                 "long_name": "conservative temperature",
                 "units": "degree_C",
