@@ -88,6 +88,14 @@ def test_run_profile_rejects_a_piece_too_short_for_the_phase_fit(lajit):
         ctd.proc.run_profile(down.isel(time=deep), clean=False)
 
 
+def test_a_piece_too_short_for_the_phase_fit_raises_piece_too_short(lajit):
+    down = ctd.proc.split_updn(ctd.proc.cleanup(lajit.copy(deep=True)))["down"]
+    deep = np.flatnonzero(down.p.values > 300)[:400]
+    assert issubclass(ctd.proc.PieceTooShort, ValueError)
+    with pytest.raises(ctd.proc.PieceTooShort, match="too short for the phase fit"):
+        ctd.proc.run_profile(down.isel(time=deep), clean=False)
+
+
 @pytest.mark.parametrize("si", ["1", "2"])
 def test_conservative_temperature_is_computed_from_absolute_salinity(lajit, si):
     down = ctd.proc.run_all(lajit.copy(deep=True))["down"]

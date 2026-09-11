@@ -26,7 +26,9 @@ New Features
 * ``proc.run_profile`` processes one single-direction piece the caller has cut (half of a
   cast, a yo, one towyo leg) with the per-direction chain of ``run_all``, which now calls
   it. The refactor leaves ``run_all`` output unchanged. A piece under 1024 scans (43 s) in the t/c fit range
-  raises ``ValueError``.
+  raises ``PieceTooShort``.
+* ``proc.PieceTooShort``, a subclass of ``ValueError``, marks a piece too short for the phase
+  fit, so a caller can skip such pieces and let any other ``ValueError`` propagate.
 
 Breaking Changes
 ~~~~~~~~~~~~~~~~

@@ -22,6 +22,7 @@ __all__ = [
     "remove_out_of_bounds",
     "preen_ctd",
     "add_tcfit_default",
+    "PieceTooShort",
 ]
 
 # We are running into trouble if the default backend is not installed
@@ -72,6 +73,14 @@ _N_SEGMENT = 512
 _MIN_SEGMENTS = 2
 
 
+class PieceTooShort(ValueError):
+    """A piece too short for the phase fit of :func:`phase_correct`.
+
+    Raised by :func:`run_profile` when the piece spans fewer than
+    1024 scans inside the t/c fit pressure range or below 1 dbar.
+    """
+
+
 def run_profile(ds, clean=True):
     """
     Process one single-direction piece of a CTD record.
@@ -100,9 +109,10 @@ def run_profile(ds, clean=True):
 
     Raises
     ------
-    ValueError
-        When the piece spans fewer than 1024 scans (43 s) inside the t/c fit
-        pressure range or below 1 dbar, too few for :func:`phase_correct`.
+    PieceTooShort
+        A ``ValueError``, when the piece spans fewer than 1024 scans (43 s)
+        inside the t/c fit pressure range or below 1 dbar, too few for
+        :func:`phase_correct`.
     """
     # cleanup writes into arrays in place, and a slice of a larger Dataset
     # shares its memory and attrs; work on a copy
@@ -133,7 +143,7 @@ def _check_phase_length(ds):
         ii = np.flatnonzero(inside)
         n = 0 if ii.size == 0 else int(ii[-1] - ii[0] + 1)
         if n < need:
-            raise ValueError(
+            raise PieceTooShort(
                 f"piece too short for the phase fit: {n} scans in {label}, need {need}"
             )
 
