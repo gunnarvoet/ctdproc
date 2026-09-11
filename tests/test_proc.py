@@ -112,14 +112,27 @@ def test_cleanup_accepts_a_piece_that_starts_at_its_deepest(lajit):
 
 
 def test_run_profile_on_an_up_leg_that_starts_at_its_deepest(lajit):
-    # The piece's start is the real turnaround of this cast, where the
-    # package genuinely reverses; rmloops correctly NaNs that short loop
-    # (343 samples here, the same run already present at the start of
-    # run_all's "up" output for this cast -- see the report). Assert
-    # finite, stable output past the turnaround rather than everywhere.
+    # cleanup (tested directly above) keeps this piece's deepest sample and
+    # first time. run_profile's own phase_correct step then legitimately
+    # trims a fixed N/4 = 128-sample margin off both ends as part of its
+    # windowed FFT reconstruction (proc.py ~570), unrelated to either bug
+    # fixed here, so the raw first sample is not expected to survive into
+    # this output -- only that run_profile completes and returns usable
+    # data for a piece that starts at its own pressure maximum.
     piece = _up_leg_deeper_than_100dbar(lajit)
     out = ctd.proc.run_profile(piece)
-    assert np.isfinite(out.CT1.values[500:]).all()
+    assert out.sizes["time"] > 0
+    assert np.isfinite(out.CT1.values[0])
+    # The piece's start is the real turnaround of this cast, where the
+    # package genuinely reverses; rmloops correctly NaNs that single loop.
+    # Assert it is the only gap in CT1: one contiguous run, computed from
+    # the data rather than pinned to rmloops's own loop-detection internals
+    # (unchanged by this fix), with everything before and after finite.
+    nan_idx = np.flatnonzero(np.isnan(out.CT1.values))
+    assert nan_idx.size > 0
+    assert np.array_equal(nan_idx, np.arange(nan_idx[0], nan_idx[-1] + 1))
+    assert np.isfinite(out.CT1.values[: nan_idx[0]]).all()
+    assert np.isfinite(out.CT1.values[nan_idx[-1] + 1 :]).all()
 
 
 @pytest.mark.parametrize("direction", ["down", "up"])
