@@ -12,8 +12,16 @@ Pipeline orchestration
    :toctree: generated/
 
    ctdproc.proc.run_all
+   ctdproc.proc.run_profile
    ctdproc.proc.split_updn
    ctdproc.proc.bincast
+
+Exceptions
+----------
+.. autosummary::
+   :toctree: generated/
+
+   ctdproc.proc.PieceTooShort
 
 Cleaning
 --------
