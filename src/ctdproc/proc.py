@@ -221,16 +221,23 @@ def cleanup(ds):
     ds = preen_ctd(ds)
     # no trans, fl ***
 
-    # remove nans at start
-    fnan1 = np.squeeze(np.where(np.isnan(ds.c1.data)))
-    fnan2 = np.squeeze(np.where(np.isnan(ds.c2.data)))
-    if np.array_equiv(fnan1, fnan2) is False:
+    # remove nans at start. np.flatnonzero, not np.squeeze(np.where(...)):
+    # the latter returns a 0-d array for a single NaN, which findsegments
+    # cannot difference.
+    fnan1 = np.flatnonzero(np.isnan(ds.c1.data))
+    fnan2 = np.flatnonzero(np.isnan(ds.c2.data))
+    if not np.array_equiv(fnan1, fnan2):
         print("warning: NaNs index different in data.c1 and data.c2")
     if fnan1.size > 0:
         istart, istop, ilen = helpers.findsegments(fnan1)
-        if istart[0] != 0 | istart.size != 1:
+        if istart[0] != 0 or istart.size != 1:
             print("warning: more NaNs")
-        ds = ds.isel(time=range(istop[0] + 1, ds.time.size))
+        # only a run that starts at the first sample is a leading run. A
+        # piece cut at depth, such as a towyo leg, can hold NaN conductivity
+        # anywhere, and trimming to the end of the first run would drop
+        # everything before it.
+        if istart[0] == 0:
+            ds = ds.isel(time=range(istop[0] + 1, ds.time.size))
 
     return ds
 

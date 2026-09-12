@@ -171,3 +171,53 @@ def test_rmloops_on_a_leg_without_loops(direction):
     before = ds.copy(deep=True)
     out = ctd.proc.rmloops(ds)
     xr.testing.assert_identical(out, before)
+
+
+def _synthetic_deep_piece(n=24 * 200, nan_c=None):
+    """A clean synthetic down-cast that never rises above 1 dbar, so
+    cleanup's near-surface trim is a no-op and sample indices survive it.
+    ``nan_c`` is a slice of c1 and c2 set to NaN; preen_ctd leaves NaN
+    alone, so it reaches the NaN-trim block at the end of cleanup."""
+    time = np.datetime64("2020-01-01") + np.arange(n) * np.timedelta64(1000 // 24, "ms")
+    ds = xr.Dataset(
+        {
+            "p": ("time", np.linspace(5.0, 200.0, n)),
+            "t1": ("time", np.linspace(20.0, 5.0, n)),
+            "t2": ("time", np.linspace(20.0, 5.0, n)),
+            "c1": ("time", np.linspace(5.0, 3.3, n)),
+            "c2": ("time", np.linspace(5.0, 3.3, n)),
+        },
+        coords={"time": time},
+    )
+    ctd.io.add_default_proc_params(ds)
+    if nan_c is not None:
+        for v in ("c1", "c2"):
+            ds[v][nan_c] = np.nan
+    return ds
+
+
+def test_cleanup_drops_a_leading_run_of_nan_conductivity():
+    ds = _synthetic_deep_piece(nan_c=slice(0, 50))
+    before = ds.copy(deep=True)
+    out = ctd.proc.cleanup(ds)
+    assert out.time.values[0] == before.time.values[50]
+    assert out.sizes["time"] == before.sizes["time"] - 50
+
+
+@pytest.mark.parametrize("start,stop", [(1000, 1050), (24 * 200 - 50, 24 * 200)])
+def test_cleanup_keeps_nan_conductivity_that_is_not_a_leading_run(start, stop, capsys):
+    """An interior or trailing run of NaN conductivity leaves the piece
+    whole. Trimming to the end of the first run would drop every sample
+    before it, and for a trailing run that is the whole piece."""
+    ds = _synthetic_deep_piece(nan_c=slice(start, stop))
+    before = ds.copy(deep=True)
+    out = ctd.proc.cleanup(ds)
+    assert out.sizes["time"] == before.sizes["time"]
+    assert out.time.values[0] == before.time.values[0]
+    assert "more NaNs" in capsys.readouterr().out
+
+
+def test_cleanup_survives_a_single_nan_conductivity_sample():
+    ds = _synthetic_deep_piece(nan_c=slice(1000, 1001))
+    out = ctd.proc.cleanup(ds)
+    assert out.sizes["time"] == 24 * 200

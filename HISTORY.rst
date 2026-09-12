@@ -62,6 +62,20 @@ Bug Fixes
 * ``proc.rmloops`` accepts a piece without loops. Its index of loop samples started as an
   empty float array and stayed one when no sample fell below ``wthresh``, which raised
   ``IndexError`` on assignment. It is now an empty integer array.
+* ``proc.cleanup`` trims a run of NaN conductivity only where the run starts at the first
+  sample, as its docstring says. It trimmed to the end of the first run wherever that run
+  sat, so a piece cut at depth lost every sample ahead of an interior run, and a piece whose
+  conductivity goes out of range at the end came back empty. The guarding warning never fired
+  in those cases: ``istart[0] != 0 | istart.size != 1`` binds as
+  ``istart[0] != (0 | istart.size) != 1``, which is False for a single run anywhere but at
+  index ``istart.size``. Reachable through ``run_profile`` on a towyo leg, and through
+  ``preen_ctd``, which leaves NaN where it extrapolates past the first or last in-range
+  sample. Output of ``run_all`` on ``lajit2-sr1614-001.hex`` is unchanged, verified variable
+  by variable: that file has no NaN conductivity at the block, so the trim never ran.
+* ``proc.cleanup`` handles a single NaN conductivity sample. The index array came from
+  ``np.squeeze(np.where(...))``, which collapses to 0-d for one hit, and
+  ``helpers.findsegments`` raised ``ValueError`` from ``np.diff`` on it. It now uses
+  ``np.flatnonzero``.
 
 Documentation
 ~~~~~~~~~~~~~
