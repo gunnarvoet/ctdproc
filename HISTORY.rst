@@ -71,7 +71,9 @@ Bug Fixes
   index ``istart.size``. Reachable through ``run_profile`` on a towyo leg, and through
   ``preen_ctd``, which leaves NaN where it extrapolates past the first or last in-range
   sample. Output of ``run_all`` on ``lajit2-sr1614-001.hex`` is unchanged, verified variable
-  by variable: that file has no NaN conductivity at the block, so the trim never ran.
+  by variable: that file has no NaN conductivity at the block, so the trim never ran. Nor
+  does any of the 469 towyo leg pieces of RR1708 casts 002 to 004, checked one by one, so
+  the yosonar level 5 written from them is unchanged as well.
 * ``proc.cleanup`` handles a single NaN conductivity sample. The index array came from
   ``np.squeeze(np.where(...))``, which collapses to 0-d for one hit, and
   ``helpers.findsegments`` raised ``ValueError`` from ``np.diff`` on it. It now uses
