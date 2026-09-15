@@ -192,13 +192,13 @@ class CTDHex(object):
                 name="ConductivitySensor1",
                 long_name="conductivity",
                 standard_name="sea_water_conductivity",
-                units="mS cm-1",
+                units="S m-1",
             ),
             c2=dict(
                 name="ConductivitySensor2",
                 long_name="conductivity",
                 standard_name="sea_water_conductivity",
-                units="mS cm-1",
+                units="S m-1",
             ),
             p=dict(
                 name="PressureSensor",
@@ -742,7 +742,7 @@ class CTDHex(object):
         Applies the calibration coefficients in ``self.cfgp`` to the
         contents of ``self.dataraw`` and stores the result in
         ``self.data`` as a :class:`munch.Munch` of named time series:
-        pressure (dbar), temperature (deg C), conductivity (mS/cm),
+        pressure (dbar), temperature (deg C), conductivity (S/m),
         salinity, oxygen (ml/L), altimeter, transmissivity, PAR, SPAR,
         fluorescence, and time.
         """

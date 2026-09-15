@@ -38,6 +38,11 @@ Breaking Changes
 
 Bug Fixes
 ~~~~~~~~~
+* The ``units`` attribute of ``c1`` and ``c2`` reads ``S m-1``. ``_freq2cond`` evaluates the
+  Sea-Bird calibration equation with its factor 1/10, which yields S/m (about 3.6 in
+  seawater), while the attribute and the ``physicalunits`` docstring said mS/cm.
+  ``calcs.calc_allsal`` already converts to mS/cm before ``gsw.SP_from_C``, so salinity was
+  right. Only the metadata changes.
 * ``calcs.calc_temp`` computes conservative temperature from absolute salinity. It passed
   practical salinity to ``gsw.CT_from_t`` in every release from 0.1.1 to 0.2.0, so ``CT1``
   and ``CT2`` came out too warm, and the potential density anomalies ``sg1`` and ``sg2``,
