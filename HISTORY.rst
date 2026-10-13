@@ -54,6 +54,16 @@ Bug Fixes
   ``sg1`` and ``sg2``.
 * Convert SBE43 oxygen after the time vector exists. ``CTDHex.physicalunits`` converted oxygen first and handed ``_volt2oxygen`` the scan index as time in seconds, so the tau*dV/dt term came out 1/24 of its size, from a 5-scan derivative window. On RR1708 ``FLEAT_recovery_002.hex`` the corrected ``oxygen1`` differs by 0.008 ml/L median absolute, 0.066 at the 95th and 0.14 at the 99th percentile, against a median of 2.27 ml/L.
 * Initialize the output of the NaN-masked comparisons in ``helpers.glitchcorrect`` and ``proc.despike``. ``np.greater`` with ``where=`` and no ``out=`` leaves the masked entries uninitialized, so a comparison against NaN came back True at random and ``run_all`` returned different output on repeated runs of the same file: 1 to 11 samples per variable on ``lajit2-sr1614-001.hex``, up to 1.3e-4 in CT and sigma0, and moving NaN positions.
+* ``helpers.interpbadsegments`` leaves a segment unchanged when the sample on either side of
+  it is NaN. It interpolated between those two samples, so one NaN neighbor turned the whole
+  segment into NaN. With the despiking fix above, ``glitchcorrect`` no longer counts a NaN as
+  a glitch at random, and a sample that ``despike`` had set to NaN could border a flagged
+  segment. On the upcast of ``SKQ202417S_004.hex``, 10 despiked ``s1`` samples in the
+  thermocline grew to 393 NaN, which emptied 10 of the 1 m bins and left one bin 0.35 above
+  its neighbors. The upcast now has 137 NaN ``s1`` samples where it had 520, and no emptied
+  bin. Output of ``run_all`` on ``lajit2-sr1614-001.hex`` is unchanged. On
+  ``BLT_Test_001.hex`` the downcast has 343 fewer NaN ``s1`` samples and 30 of its 1 m bins
+  change, by up to 0.005 in ``s1``.
 * Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)
 * Compute pressure from a 30 second backward-looking running average of the pressure sensor temperature, as specified in the SBE Data Processing manual. Previously the instantaneous 12 bit pressure temperature word was used, so bit transitions caused small jumps in computed pressure. Computed pressure changes by order 0.01 dbar. (:issue:`48`)
 * Convert altimeter voltage with the Sea-Bird formula ``300 * volts / ScaleFactor + Offset``. The scale factor was previously applied as a multiplier, so with the standard scale factor of 15 the altimeter was read as a 75 m rather than a 100 m unit. Reported height above bottom changes by a factor of 4/3 for every reprocessed cast. Note that this corrects the conversion only; it does not address any remaining scale error in ``alt`` from the altimeter's internal sound speed assumption. (:issue:`60`)

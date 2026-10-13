@@ -67,6 +67,24 @@ def test_interpbadsegments(testdata):
     assert np.all(y <= 5)
 
 
+@pytest.mark.parametrize("inan", [1, 5])
+def test_interpbadsegments_leaves_a_segment_next_to_a_nan(inan):
+    """A NaN neighbor must not turn the whole segment into NaN."""
+    x = np.arange(10.0)
+    x[inan] = np.nan
+    y = helpers.interpbadsegments(x, np.array([2, 3, 4]))
+    assert np.array_equal(y, x, equal_nan=True)
+
+
+def test_glitchcorrect_does_not_spread_a_nan():
+    """A glitch next to a NaN stays, and the NaN count does not grow."""
+    x = np.zeros(20)
+    x[6] = np.nan
+    x[10] = 5
+    y = helpers.glitchcorrect(x, 1, 1, ibefore=2, iafter=2)
+    assert np.array_equal(y, x, equal_nan=True)
+
+
 def test_glitchcorrect(testdata2):
     diffx = 2
     prodx = 1

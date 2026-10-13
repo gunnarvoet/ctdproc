@@ -139,6 +139,10 @@ def interpbadsegments(x, ibad):
         elif i3 > x.size:
             # start_end_warning("end")
             pass
+        elif np.isnan(x[i1]) or np.isnan(x[i3]):
+            # a NaN neighbor, such as a sample removed by despiking, would
+            # turn the whole segment into NaN; leave the segment as it is
+            pass
         else:
             y[i2] = interp1d(np.array([i1, i3]), x[[i1, i3]])(i2)
     return y
