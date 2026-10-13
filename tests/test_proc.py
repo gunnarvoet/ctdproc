@@ -221,3 +221,10 @@ def test_cleanup_survives_a_single_nan_conductivity_sample():
     ds = _synthetic_deep_piece(nan_c=slice(1000, 1001))
     out = ctd.proc.cleanup(ds)
     assert out.sizes["time"] == 24 * 200
+
+
+def test_run_all_names_a_channel_with_no_sample_in_bounds():
+    """A deck test has conductivity near zero, outside ``bounds_c``."""
+    ds = ctd.io.CTDx(LAJIT.parent / "ar73_dt001.hex")
+    with pytest.raises(ValueError, match="no c1 sample within bounds_c"):
+        ctd.proc.run_all(ds)

@@ -368,14 +368,21 @@ def preen_ctd(ds):
     -------
     ds : xarray.Dataset
         Dataset with each channel cleaned and reinterpolated.
+
+    Raises
+    ------
+    ValueError
+        When a channel has no sample within its bounds, as in a deck test or
+        with a failed sensor.
     """
     for v in ["p", "t1", "t2", "c1", "c2"]:
-        ds[v] = ds[v].where(
-            xr.zeros_like(ds[v]),
-            helpers.preen(
-                ds[v].data, ds.attrs[f"bounds_{v[0]}"][0], ds.attrs[f"bounds_{v[0]}"][1]
-            ),
-        )
+        bmin, bmax = ds.attrs[f"bounds_{v[0]}"]
+        if not np.any((ds[v].data >= bmin) & (ds[v].data <= bmax)):
+            raise ValueError(
+                f"no {v} sample within bounds_{v[0]} [{bmin}, {bmax}], "
+                "such as a deck test or a failed sensor"
+            )
+        ds[v] = ds[v].where(xr.zeros_like(ds[v]), helpers.preen(ds[v].data, bmin, bmax))
 
     # TODO: remove spikes in oxygen, trans, fl in volts.
     return ds

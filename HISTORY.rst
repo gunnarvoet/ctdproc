@@ -64,6 +64,12 @@ Bug Fixes
   bin. Output of ``run_all`` on ``lajit2-sr1614-001.hex`` is unchanged. On
   ``BLT_Test_001.hex`` the downcast has 343 fewer NaN ``s1`` samples and 30 of its 1 m bins
   change, by up to 0.005 in ``s1``.
+* ``proc.preen_ctd`` raises a ``ValueError`` that names the channel and its bounds when no
+  sample of ``p``, ``t1``, ``t2``, ``c1`` or ``c2`` is in range, as in a deck test or with a
+  failed sensor. ``run_all`` on such a record failed inside ``scipy.interpolate.interp1d``
+  with ``cannot reshape array of size 0``. The deck test ``ar73_dt001.hex``, with
+  conductivity near 0.08 S/m against bounds of 2 to 6, now reports
+  ``no c1 sample within bounds_c [2.0, 6.0]``.
 * Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)
 * Compute pressure from a 30 second backward-looking running average of the pressure sensor temperature, as specified in the SBE Data Processing manual. Previously the instantaneous 12 bit pressure temperature word was used, so bit transitions caused small jumps in computed pressure. Computed pressure changes by order 0.01 dbar. (:issue:`48`)
 * Convert altimeter voltage with the Sea-Bird formula ``300 * volts / ScaleFactor + Offset``. The scale factor was previously applied as a multiplier, so with the standard scale factor of 15 the altimeter was read as a 75 m rather than a 100 m unit. Reported height above bottom changes by a factor of 4/3 for every reprocessed cast. Note that this corrects the conversion only; it does not address any remaining scale error in ``alt`` from the altimeter's internal sound speed assumption. (:issue:`60`)
