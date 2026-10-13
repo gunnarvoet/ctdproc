@@ -287,3 +287,13 @@ def test_salinity_cleanup_adds_no_nan_on_blt(blt_updown, direction):
     ds = blt_updown[direction]
     for n in "12":
         assert np.isnan(ds[f"s{n}"]).sum() <= np.isnan(ds[f"t{n}"]).sum()
+
+
+def test_run_profile_with_shallow_samples_ahead_of_the_piece(lajit):
+    """phase_correct starts at the first sample below 1 dbar. Its segment
+    count for the recomputed spectra must not depend on where that is."""
+    down = ctd.proc.split_updn(ctd.proc.cleanup(lajit.copy(deep=True)))["down"]
+    down = down.copy(deep=True)
+    down.p[:600] = 0.5
+    out = ctd.proc.run_profile(down, clean=False)
+    assert out.sizes["time"] > 0

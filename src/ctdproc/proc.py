@@ -616,8 +616,9 @@ def phase_correct(ds):
     c2 = Adi["c2"][int(N / 4) : -int(N / 4)]
     # p = Adi["p"][int(N / 4) : -int(N / 4)]
 
-    m = (i2 - N) / N  # number of segments = dof/2
-    m = np.floor(m).astype("int64")
+    # number of segments = dof/2. The series is N shorter than the n samples
+    # that went into the correction, wherever the piece starts.
+    m = (n - N) // N
     dof = 2 * m  # Number of degrees of freedom (power of 2)
     df = 1 / (N * dt)  # Frequency resolution at dof degrees of freedom.
 

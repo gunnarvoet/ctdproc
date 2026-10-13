@@ -99,6 +99,11 @@ Bug Fixes
   ``np.squeeze(np.where(...))``, which collapses to 0-d for one hit, and
   ``helpers.findsegments`` raised ``ValueError`` from ``np.diff`` on it. It now uses
   ``np.flatnonzero``.
+* ``phase_correct`` counts the segments of its recomputed spectra from the length of the
+  corrected series. It used the end index of the series, so a piece whose first sample below
+  1 dbar sat at index 512 or later raised ``ValueError`` from ``np.reshape``. Reachable
+  through ``run_profile`` with ``clean=False`` on a piece with 21 s or more of data above
+  1 dbar ahead of it. Output is unchanged.
 
 Documentation
 ~~~~~~~~~~~~~
