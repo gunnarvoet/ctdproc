@@ -530,8 +530,9 @@ Documenting your code
 Changes should be reflected in the release notes located in ``HISTORY.rst``.
 This file contains an ongoing change log for each release.  Add an entry to this file to
 document your fix, enhancement or (unavoidable) breaking change.  Make sure to include the
-GitHub issue number when adding your entry (using ``:issue:`1234```, where ``1234`` is the
-issue/pull request number).
+GitHub issue number when adding your entry (using ``:issue:`1234``` or ``:pull:`1234```,
+where ``1234`` is the issue or pull request number). A change committed without an issue or
+pull request cites its commit with ``:commit:`abc1234```.
 
 If your code is an enhancement, it is most likely necessary to add usage
 examples to the existing documentation.  This can be done following the section

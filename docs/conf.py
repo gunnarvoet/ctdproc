@@ -62,6 +62,7 @@ intersphinx_mapping = {
 extlinks = {
     "issue": ("https://github.com/gunnarvoet/ctdproc/issues/%s", "GH %s"),
     "pull": ("https://github.com/gunnarvoet/ctdproc/pull/%s", "PR %s"),
+    "commit": ("https://github.com/gunnarvoet/ctdproc/commit/%s", "%s"),
 }
 
 # Add any paths that contain templates here, relative to this directory.
