@@ -320,3 +320,25 @@ def test_conservative_temperature_where_absolute_salinity_exceeds_bounds_s():
     assert float(out.SA1.min()) > 38
     for v in ("s1", "SA1", "CT1", "sg1", "s2", "SA2", "CT2", "sg2"):
         assert np.isfinite(out[v]).all(), v
+
+
+def _shallow_piece(lajit):
+    """The part of the down-cast above 45 dbar, shallower than the default
+    lower bound of the t/c fit range."""
+    down = ctd.proc.split_updn(ctd.proc.cleanup(lajit.copy(deep=True)))["down"]
+    return down.isel(time=np.flatnonzero(down.p.values < 45))
+
+
+def test_run_profile_takes_the_fit_range_from_its_tcfit_argument(lajit):
+    piece = _shallow_piece(lajit)
+    # a fit range left on the piece by its parent cast must not be used
+    piece.attrs["tcfit"] = [500, 1000]
+    out = ctd.proc.run_profile(piece, clean=False, tcfit=[5, 45])
+    assert out.attrs["tcfit"] == [5, 45]
+    assert piece.attrs["tcfit"] == [500, 1000]
+    assert np.isfinite(out.attrs["tau1"])
+
+
+def test_piece_too_short_for_the_default_fit_range_names_tcfit(lajit):
+    with pytest.raises(ctd.proc.PieceTooShort, match="tcfit"):
+        ctd.proc.run_profile(_shallow_piece(lajit), clean=False)

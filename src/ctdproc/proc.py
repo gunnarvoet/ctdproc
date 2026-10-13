@@ -81,7 +81,7 @@ class PieceTooShort(ValueError):
     """
 
 
-def run_profile(ds, clean=True):
+def run_profile(ds, clean=True, tcfit=None):
     """
     Process one single-direction piece of a CTD record.
 
@@ -100,6 +100,12 @@ def run_profile(ds, clean=True):
     clean : bool, optional
         Run :func:`cleanup` first. :func:`run_all` passes False because it
         cleans the whole cast before splitting it. Defaults to True.
+    tcfit : sequence of two floats, optional
+        Lower and upper pressure in dbar of the range used for the phase fit.
+        Defaults to the range :func:`add_tcfit_default` picks from the
+        pressure maximum of the piece, which starts at 50 dbar or deeper. A
+        ``tcfit`` in ``ds.attrs`` is ignored, since a piece inherits the
+        attrs of the record it was cut from.
 
     Returns
     -------
@@ -121,7 +127,10 @@ def run_profile(ds, clean=True):
     ds = ds.copy(deep=True)
     if clean:
         ds = cleanup(ds)
-    add_tcfit_default(ds)
+    if tcfit is None:
+        add_tcfit_default(ds)
+    else:
+        ds.attrs["tcfit"] = [float(tcfit[0]), float(tcfit[1])]
     ds = ds.dropna("time", how="any")
     _check_phase_length(ds)
     ds = phase_correct(ds)
@@ -135,18 +144,20 @@ def _check_phase_length(ds):
     need = _N_SEGMENT * _MIN_SEGMENTS
     p = ds.p.data
     lo, hi = ds.attrs["tcfit"]
-    for label, inside in (
+    for label, inside, hint in (
         (
             f"the t/c fit range {float(lo):.0f} to {float(hi):.0f} dbar",
             (p > lo) & (p < hi),
+            ". The tcfit argument of run_profile sets the fit range.",
         ),
-        ("the record below 1 dbar", p > 1),
+        ("the record below 1 dbar", p > 1, ""),
     ):
         ii = np.flatnonzero(inside)
         n = 0 if ii.size == 0 else int(ii[-1] - ii[0] + 1)
         if n < need:
             raise PieceTooShort(
-                f"piece too short for the phase fit: {n} scans in {label}, need {need}"
+                f"piece too short for the phase fit: {n} scans in {label}, "
+                f"need {need}{hint}"
             )
 
 
