@@ -136,7 +136,7 @@ def interpbadsegments(x, ibad):
         if i1 < 0:
             # start_end_warning("start")
             pass
-        elif i3 > x.size:
+        elif i3 >= x.size:
             # start_end_warning("end")
             pass
         elif np.isnan(x[i1]) or np.isnan(x[i3]):

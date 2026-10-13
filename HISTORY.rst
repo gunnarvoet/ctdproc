@@ -109,6 +109,8 @@ Bug Fixes
   absolute salinity as well, which is about 0.18 g/kg higher, so ``SA`` was NaN at a
   practical salinity of 37.9. With the conservative temperature fix above, ``CT`` and ``sg``
   were NaN there too.
+* ``helpers.interpbadsegments`` leaves a segment that ends on the last sample unchanged. It
+  raised ``IndexError``. ``glitchcorrect`` never passes such a segment.
 
 Documentation
 ~~~~~~~~~~~~~

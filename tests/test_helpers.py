@@ -95,3 +95,9 @@ def test_glitchcorrect(testdata2):
 def test_preen(testdata):
     xp = helpers.preen(testdata, xmin=-5, xmax=5)
     assert np.all(np.absolute(xp) < 10)
+
+
+def test_interpbadsegments_leaves_a_segment_that_ends_on_the_last_sample():
+    x = np.arange(10.0)
+    y = helpers.interpbadsegments(x, np.array([8, 9]))
+    assert np.array_equal(y, x)
