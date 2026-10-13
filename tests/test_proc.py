@@ -228,3 +228,62 @@ def test_run_all_names_a_channel_with_no_sample_in_bounds():
     ds = ctd.io.CTDx(LAJIT.parent / "ar73_dt001.hex")
     with pytest.raises(ValueError, match="no c1 sample within bounds_c"):
         ctd.proc.run_all(ds)
+
+
+# run_all output on BLT_Test_001.hex. A change here is a change in processed
+# values and needs a HISTORY entry.
+BLT_REFERENCE = {
+    "down": {
+        "n": 58624,
+        "nan": {"t1": 10413, "c1": 10413, "s1": 10399, "s2": 10397, "oxygen1": 10413},
+        "mean": {
+            "p": 575.742599,
+            "t1": 7.107426,
+            "s1": 34.251215,
+            "s2": 34.255514,
+            "CT1": 7.062551,
+            "SA1": 34.422868,
+            "sg1": 26.779401,
+            "oxygen1": 1.014206,
+        },
+    },
+    "up": {
+        "n": 60672,
+        "nan": {"t1": 66, "c1": 66, "s1": 66, "s2": 66, "oxygen1": 66},
+        "mean": {
+            "p": 579.871483,
+            "t1": 7.089075,
+            "s1": 34.245890,
+            "s2": 34.250272,
+            "CT1": 7.044358,
+            "SA1": 34.417521,
+            "sg1": 26.775393,
+            "oxygen1": 1.032663,
+        },
+    },
+}
+
+
+@pytest.fixture(scope="module")
+def blt_updown():
+    return ctd.proc.run_all(ctd.io.CTDx(LAJIT.parent / "BLT_Test_001.hex"))
+
+
+@pytest.mark.parametrize("direction", ["down", "up"])
+def test_run_all_reproduces_the_blt_reference(blt_updown, direction):
+    ds = blt_updown[direction]
+    ref = BLT_REFERENCE[direction]
+    assert ds.sizes["time"] == ref["n"]
+    nan = {v: int(np.isnan(ds[v]).sum()) for v in ref["nan"]}
+    assert nan == ref["nan"]
+    mean = {v: float(np.nanmean(ds[v])) for v in ref["mean"]}
+    assert mean == pytest.approx(ref["mean"], abs=2e-6)
+
+
+@pytest.mark.parametrize("direction", ["down", "up"])
+def test_salinity_cleanup_adds_no_nan_on_blt(blt_updown, direction):
+    """Glitch correction of salinity once spread a despiked NaN over the
+    segment next to it, 343 samples of s1 on this downcast."""
+    ds = blt_updown[direction]
+    for n in "12":
+        assert np.isnan(ds[f"s{n}"]).sum() <= np.isnan(ds[f"t{n}"]).sum()
