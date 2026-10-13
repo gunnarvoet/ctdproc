@@ -284,16 +284,19 @@ def cleanup_ud(ds):
     # despike s
     ibefore = 2
     iafter = 2
-    for v in ["s1", "s2", "SA1", "SA2"]:
-        # remove spikes
-        ds[v] = despike(ds[v], ds.attrs["spike_thresh_s"])
-        # remove out of bounds data
-        ds[v] = remove_out_of_bounds(
-            ds[v], bmin=ds.attrs["bounds_s"][0], bmax=ds.attrs["bounds_s"][1]
-        )
-        ds[v].data = helpers.glitchcorrect(
-            ds[v], ds.attrs["diff_s"], ds.attrs["prod_s"], ibefore, iafter
-        )
+    bmin, bmax = ds.attrs["bounds_s"]
+    for n in ["1", "2"]:
+        # bounds_s is in practical salinity. Absolute salinity is about 0.18
+        # higher, so it takes the bounds mask of its practical salinity.
+        inbounds = ((ds[f"s{n}"] >= bmin) & (ds[f"s{n}"] <= bmax)).data
+        for v in [f"s{n}", f"SA{n}"]:
+            # remove spikes
+            ds[v] = despike(ds[v], ds.attrs["spike_thresh_s"])
+            # remove out of bounds data
+            ds[v] = ds[v].where(inbounds)
+            ds[v].data = helpers.glitchcorrect(
+                ds[v], ds.attrs["diff_s"], ds.attrs["prod_s"], ibefore, iafter
+            )
 
     # calculate potential/conservative temperature, potential density anomaly
     ds = calcs.calc_temp(ds)

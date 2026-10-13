@@ -104,6 +104,11 @@ Bug Fixes
   1 dbar sat at index 512 or later raised ``ValueError`` from ``np.reshape``. Reachable
   through ``run_profile`` with ``clean=False`` on a piece with 21 s or more of data above
   1 dbar ahead of it. Output is unchanged.
+* ``proc.cleanup_ud`` applies ``bounds_s`` to practical salinity, and ``SA1`` and ``SA2``
+  take the bounds mask of their practical salinity. The bounds of 20 to 38 were applied to
+  absolute salinity as well, which is about 0.18 g/kg higher, so ``SA`` was NaN at a
+  practical salinity of 37.9. With the conservative temperature fix above, ``CT`` and ``sg``
+  were NaN there too.
 
 Documentation
 ~~~~~~~~~~~~~

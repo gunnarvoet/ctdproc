@@ -297,3 +297,26 @@ def test_run_profile_with_shallow_samples_ahead_of_the_piece(lajit):
     down.p[:600] = 0.5
     out = ctd.proc.run_profile(down, clean=False)
     assert out.sizes["time"] > 0
+
+
+def test_conservative_temperature_where_absolute_salinity_exceeds_bounds_s():
+    """Practical salinity 37.9 is inside ``bounds_s`` of 20 to 38 while its
+    absolute salinity is above 38. CT must not go NaN there."""
+    n = 24 * 20
+    t, p = np.full(n, 13.0), np.linspace(900.0, 1000.0, n)
+    c = gsw.C_from_SP(np.full(n, 37.9), t, p) / 10
+    time = np.datetime64("2020-01-01") + np.arange(n) * np.timedelta64(1000 // 24, "ms")
+    ds = xr.Dataset(
+        {
+            v: ("time", x.copy())
+            for v, x in (("p", p), ("t1", t), ("t2", t), ("c1", c), ("c2", c))
+        },
+        coords={"time": time},
+    )
+    ds["lon"] = ("time", np.full(n, -10.0))
+    ds["lat"] = ("time", np.full(n, 36.0))
+    ctd.io.add_default_proc_params(ds)
+    out = ctd.proc.cleanup_ud(ds)
+    assert float(out.SA1.min()) > 38
+    for v in ("s1", "SA1", "CT1", "sg1", "s2", "SA2", "CT2", "sg2"):
+        assert np.isfinite(out[v]).all(), v
