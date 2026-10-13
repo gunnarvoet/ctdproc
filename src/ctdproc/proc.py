@@ -112,7 +112,9 @@ def run_profile(ds, clean=True):
     PieceTooShort
         A ``ValueError``, when the piece spans fewer than 1024 scans (43 s)
         inside the t/c fit pressure range or below 1 dbar, too few for
-        :func:`phase_correct`.
+        :func:`phase_correct`. The fit range excludes its bounds, and the
+        default upper bound is the pressure maximum of the piece, so the
+        deepest scan does not count.
     """
     # cleanup writes into arrays in place, and a slice of a larger Dataset
     # shares its memory and attrs; work on a copy
