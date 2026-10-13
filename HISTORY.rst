@@ -18,7 +18,7 @@ History
 .. ~~~~~~~~~~~~~~~~
 
 
-0.3.0 (unreleased)
+0.3.0 (2026-10-13)
 ------------------
 
 This release changes processed values. Output of 0.2.0 differs from this release in the
