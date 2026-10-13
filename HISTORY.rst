@@ -18,8 +18,20 @@ History
 .. ~~~~~~~~~~~~~~~~
 
 
-0.2.1 (unreleased)
+0.3.0 (unreleased)
 ------------------
+
+This release changes processed values. Output of 0.2.0 differs from this release in the
+following variables. Reprocess where they matter. Bug Fixes below has the details.
+
+* ``CT1``, ``CT2``, ``sg1``, ``sg2``: conservative temperature was 2 to 7 mK too warm, more in
+  warm water, and potential density anomaly 0.0002 to 0.0004 kg m-3 too light, in every
+  release since 0.1.1.
+* ``alt``: height above bottom was 3/4 of its value.
+* ``oxygen1``: the sensor time response correction was 1/24 of its size.
+* ``p``: changes by order 0.01 dbar, which can move the split between down- and upcast.
+* Every variable: repeated runs of 0.2.0 on one file could give different output. Runs are
+  now repeatable.
 
 New Features
 ~~~~~~~~~~~~
@@ -50,11 +62,13 @@ Bug Fixes
   computed from CT, too light. On RR1708 cast 003 (yosonar level 5, fine grid) the error is
   0.0020 degC median in CT (5th to 95th percentile 0.0019 to 0.0023) and -0.00018 kg m-3
   median in sigma0. On ``lajit2-sr1614-001.hex`` it is 0.0025 to 0.0026 degC and -0.00034
-  to -0.00036 kg m-3. Potential temperature ``th1``, ``th2`` and absolute salinity were
+  to -0.00036 kg m-3. The error grows with temperature. For practical salinity 34.7,
+  ``gsw.CT_from_t`` gives 2.3 mK at 1.5 degC, 4.1 mK at 15 degC and 6.7 mK at 28 degC.
+  Potential temperature ``th1``, ``th2`` and absolute salinity were
   right. Output of ``run_all``, ``run_profile`` and ``bincast`` changes in ``CT1``, ``CT2``,
   ``sg1`` and ``sg2``.
 * Convert SBE43 oxygen after the time vector exists. ``CTDHex.physicalunits`` converted oxygen first and handed ``_volt2oxygen`` the scan index as time in seconds, so the tau*dV/dt term came out 1/24 of its size, from a 5-scan derivative window. On RR1708 ``FLEAT_recovery_002.hex`` the corrected ``oxygen1`` differs by 0.008 ml/L median absolute, 0.066 at the 95th and 0.14 at the 99th percentile, against a median of 2.27 ml/L.
-* Initialize the output of the NaN-masked comparisons in ``helpers.glitchcorrect`` and ``proc.despike``. ``np.greater`` with ``where=`` and no ``out=`` leaves the masked entries uninitialized, so a comparison against NaN came back True at random and ``run_all`` returned different output on repeated runs of the same file: 1 to 11 samples per variable on ``lajit2-sr1614-001.hex``, up to 1.3e-4 in CT and sigma0, and moving NaN positions.
+* Initialize the output of the NaN-masked comparisons in ``helpers.glitchcorrect`` and ``proc.despike``. ``np.greater`` with ``where=`` and no ``out=`` leaves the masked entries uninitialized, so a comparison against NaN came back True at random and ``run_all`` returned different output on repeated runs of the same file: 1 to 11 samples per variable on ``lajit2-sr1614-001.hex``, up to 1.3e-4 in CT and sigma0, and moving NaN positions. On ``SKQ202417S_004.hex`` two runs of the code before this fix differed in 62 to 66 of the 1 m downcast bins, by up to 0.005 degC in ``t1`` and 0.008 degC in ``CT1``.
 * ``helpers.interpbadsegments`` leaves a segment unchanged when the sample on either side of
   it is NaN. It interpolated between those two samples, so one NaN neighbor turned the whole
   segment into NaN. With the despiking fix above, ``glitchcorrect`` no longer counts a NaN as
@@ -72,7 +86,7 @@ Bug Fixes
   conductivity near 0.08 S/m against bounds of 2 to 6, now reports
   ``no c1 sample within bounds_c [2.0, 6.0]``.
 * Replace deprecated ``newshape`` keyword with ``shape`` in ``np.reshape`` calls in ``phase_correct`` for NumPy 2.x compatibility. (:pull:`55`)
-* Compute pressure from a 30 second backward-looking running average of the pressure sensor temperature, as specified in the SBE Data Processing manual. Previously the instantaneous 12 bit pressure temperature word was used, so bit transitions caused small jumps in computed pressure. Computed pressure changes by order 0.01 dbar. (:issue:`48`)
+* Compute pressure from a 30 second backward-looking running average of the pressure sensor temperature, as specified in the SBE Data Processing manual. Previously the instantaneous 12 bit pressure temperature word was used, so bit transitions caused small jumps in computed pressure. Computed pressure changes by order 0.01 dbar. The pressure maximum can land on a different scan, which moves the split between down- and upcast. On ``SKQ202417S_004.hex`` the upcast starts 0.54 s later. (:issue:`48`)
 * Convert altimeter voltage with the Sea-Bird formula ``300 * volts / ScaleFactor + Offset``. The scale factor was previously applied as a multiplier, so with the standard scale factor of 15 the altimeter was read as a 75 m rather than a 100 m unit. Reported height above bottom changes by a factor of 4/3 for every reprocessed cast. Note that this corrects the conversion only; it does not address any remaining scale error in ``alt`` from the altimeter's internal sound speed assumption. (:issue:`60`)
 * ``phase_correct`` keeps the fitted thermistor time constants and lags as ``tau1``,
   ``tau2``, ``L1``, ``L2`` in the output attrs. ``assign_attrs`` returned a new object that
