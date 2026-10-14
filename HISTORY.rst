@@ -18,6 +18,25 @@ History
 .. ~~~~~~~~~~~~~~~~
 
 
+0.3.1 (unreleased)
+------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking Changes
+~~~~~~~~~~~~~~~~
+
+Bug Fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+
 0.3.0 (2026-10-13)
 ------------------
 
